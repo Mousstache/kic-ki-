@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kisékiéplus</title>
+<style>
+  :root { --bg:#14111f; --card:#211c33; --line:#3a3354; --txt:#f3effc; --mut:#a49cbf; --acc:#ffcc33; --ok:#3ddc97; --ko:#ff5c7a; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--txt); font:16px/1.5 system-ui, sans-serif; display:flex; justify-content:center; }
+  main { width:100%; max-width:720px; padding:24px 16px 48px; }
+  h1 { font-size:clamp(2rem,8vw,3.2rem); margin:.2em 0 0; letter-spacing:-.03em; }
+  h1 span { color:var(--acc); }
+  h2 { font-size:1rem; text-transform:uppercase; letter-spacing:.08em; color:var(--mut); margin:28px 0 10px; }
+  .sub { color:var(--mut); margin:0 0 8px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+  button { font:inherit; color:inherit; cursor:pointer; border:2px solid var(--line); background:var(--card); border-radius:14px; padding:14px; text-align:left; }
+  button:hover { border-color:var(--mut); }
+  button:focus-visible, input:focus-visible { outline:3px solid var(--acc); outline-offset:2px; }
+  button[aria-pressed="true"] { border-color:var(--acc); background:#2d2640; }
+  .mode b { display:block; font-size:1.1rem; }
+  .mode small { color:var(--mut); }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chips button { padding:8px 14px; border-radius:999px; }
+  .go { display:block; width:100%; margin-top:28px; background:var(--acc); color:#14111f; border-color:var(--acc); font-weight:800; font-size:1.2rem; text-align:center; }
+  .go:hover { filter:brightness(1.08); border-color:var(--acc); }
+  .top { display:flex; justify-content:space-between; color:var(--mut); font-size:.9rem; }
+  .q { font-size:clamp(1.4rem,5vw,2rem); font-weight:800; margin:18px 0 6px; }
+  .bar { height:10px; background:var(--card); border-radius:99px; overflow:hidden; margin:14px 0; }
+  .bar i { display:block; height:100%; background:var(--acc); transition:width .25s linear; }
+  form { display:flex; gap:8px; }
+  input { flex:1; min-width:0; font:inherit; font-size:1.1rem; padding:14px; border-radius:14px; border:2px solid var(--line); background:var(--card); color:var(--txt); }
+  form button { background:var(--acc); color:#14111f; border-color:var(--acc); font-weight:700; }
+  .verdict { font-size:1.3rem; font-weight:800; margin:16px 0 4px; }
+  .verdict.ok { color:var(--ok); } .verdict.ko { color:var(--ko); }
+  ol { list-style:none; padding:0; margin:12px 0; }
+  li { display:grid; grid-template-columns:1fr auto; gap:2px 10px; padding:8px 12px; border-radius:10px; background:var(--card); margin-bottom:6px; border:2px solid transparent; }
+  li.me { border-color:var(--acc); }
+  li .meta { color:var(--mut); font-size:.85rem; text-align:right; }
+  li .pts { grid-column:1/-1; height:4px; background:var(--line); border-radius:9px; overflow:hidden; }
+  li .pts i { display:block; height:100%; background:var(--ok); }
+  .big { font-size:4rem; font-weight:900; color:var(--acc); margin:10px 0; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main>
+  <!-- MENU -->
+  <section id="menu">
+    <h1>Kisékié<span>plus</span></h1>
+    <p class="sub">Une question, un chrono, une seule réponse. Choisis bien laquelle.</p>
+    <h2>Mode</h2>
+    <div class="grid" id="modes"></div>
+    <h2>Thème</h2>
+    <div class="chips" id="themes"></div>
+    <button class="go" id="start">Jouer (5 manches · 20 s)</button>
+  </section>
+
+  <!-- JEU -->
+  <section id="game" hidden>
+    <div class="top"><span id="round"></span><span id="score"></span></div>
+    <p class="sub" id="goal"></p>
+    <div class="q" id="question"></div>
+    <div id="ask">
+      <div class="bar"><i id="timer"></i></div>
+      <form id="form" autocomplete="off">
+        <input id="answer" aria-label="Ta réponse" placeholder="Ta réponse…">
+        <button>Valider</button>
+      </form>
+    </div>
+    <div id="reveal" hidden>
+      <div class="verdict" id="verdict"></div>
+      <p class="sub" id="best"></p>
+      <ol id="list"></ol>
+      <button class="go" id="next">Suivant</button>
+    </div>
+  </section>
+
+  <!-- FIN -->
+  <section id="end" hidden>
+    <h1>Partie <span>terminée</span></h1>
+    <div class="big" id="final"></div>
+    <p class="sub" id="recap"></p>
+    <button class="go" id="again">Rejouer</button>
+  </section>
+</main>
+
+<script>
+// Popularité = % de gens qui citent la réponse (sondage simulé, valeurs estimées). Année = sortie / début / découverte selon la question.
+// Format réponse : [nom, popularité, année, ...alias]
+const QUESTIONS = [
+  { theme:"Culture G", q:"Cite une invention marquante", y:"année d'invention", a:[
+    ["Imprimerie",14,1450],["Machine à vapeur",6,1769,"vapeur"],["Vaccin",5,1796,"vaccination"],["Téléphone",18,1876],["Ampoule",13,1879,"lampe"],
+    ["Automobile",9,1886,"voiture"],["Cinéma",4,1895],["Radio",3,1895],["Avion",10,1903],["Télévision",7,1926,"tele","tv"],
+    ["Pénicilline",3,1928,"antibiotique"],["Ordinateur",5,1946],["Internet",12,1969],["Téléphone portable",2,1973,"portable","telephone mobile"]]},
+  { theme:"Culture G", q:"Cite un peintre célèbre", y:"année de naissance", a:[
+    ["Léonard de Vinci",22,1452,"de vinci","vinci","leonard"],["Michel-Ange",5,1475],["Raphaël",2,1483],["Rembrandt",4,1606],["Vermeer",2,1632],
+    ["Goya",2,1746],["Manet",3,1832],["Degas",2,1834],["Cézanne",2,1839],["Monet",14,1840],["Renoir",3,1841],["Van Gogh",18,1853],
+    ["Klimt",1,1862],["Matisse",2,1869],["Picasso",20,1881],["Magritte",2,1898],["Dalí",6,1904],["Frida Kahlo",3,1907,"kahlo","frida"],
+    ["Andy Warhol",3,1928,"warhol"],["Basquiat",1,1960]]},
+  { theme:"Histoire", q:"Cite un président de la Ve République", y:"début du mandat", a:[
+    ["Charles de Gaulle",24,1959,"de gaulle","gaulle"],["Georges Pompidou",6,1969,"pompidou"],["Valéry Giscard d'Estaing",5,1974,"giscard","vge"],
+    ["François Mitterrand",13,1981,"mitterrand","mitterand"],["Jacques Chirac",14,1995,"chirac"],["Nicolas Sarkozy",11,2007,"sarkozy","sarko"],
+    ["François Hollande",9,2012,"hollande"],["Emmanuel Macron",18,2017,"macron"]]},
+  { theme:"Histoire", q:"Cite un roi de France", y:"début du règne", a:[
+    ["Clovis",8,481],["Charlemagne",10,768],["Hugues Capet",4,987,"capet"],["Philippe Auguste",3,1180],["Saint Louis",5,1226,"louis ix","louis 9"],
+    ["Philippe le Bel",3,1285,"philippe iv"],["François Ier",6,1515,"francois 1er","francois 1","francois premier"],["Henri IV",9,1589,"henri 4"],
+    ["Louis XIII",3,1610,"louis 13"],["Louis XIV",28,1643,"louis 14","roi soleil"],["Louis XV",4,1715,"louis 15"],["Louis XVI",13,1774,"louis 16"],
+    ["Louis XVIII",1,1814,"louis 18"],["Charles X",1,1824,"charles 10"],["Louis-Philippe",2,1830]]},
+  { theme:"Géographie", q:"Cite un pays de l'Union européenne", y:"année d'adhésion", a:[
+    ["France",20,1957],["Allemagne",16,1957],["Italie",12,1957],["Belgique",9,1957],["Pays-Bas",3,1957,"hollande"],["Luxembourg",3,1957],
+    ["Danemark",2,1973],["Irlande",2,1973],["Grèce",2,1981],["Espagne",13,1986],["Portugal",5,1986],["Autriche",1,1995],["Finlande",1,1995],
+    ["Suède",2,1995],["Pologne",3,2004],["Hongrie",1,2004],["Tchéquie",1,2004,"republique tcheque"],["Slovaquie",1,2004],["Slovénie",0.5,2004],
+    ["Estonie",0.5,2004],["Lettonie",0.5,2004],["Lituanie",0.5,2004],["Malte",0.5,2004],["Chypre",0.5,2004],["Roumanie",1,2007],["Bulgarie",0.5,2007],["Croatie",1,2013]]},
+  { theme:"Géographie", q:"Cite un pays ayant organisé les JO d'été", y:"premiers JO d'été organisés", a:[
+    ["Grèce",10,1896],["France",22,1900],["États-Unis",18,1904,"usa","etats unis","amerique"],["Royaume-Uni",9,1908,"angleterre","uk"],
+    ["Suède",1,1912],["Belgique",1,1920],["Pays-Bas",1,1928],["Allemagne",4,1936],["Finlande",1,1952],["Australie",5,1956],["Italie",2,1960],
+    ["Japon",9,1964],["Mexique",1,1968],["Canada",2,1976],["Russie",2,1980,"urss"],["Corée du Sud",1,1988,"coree"],["Espagne",3,1992],
+    ["Chine",6,2008],["Brésil",4,2016]]},
+  { theme:"Fiction", q:"Cite un tome de Harry Potter", y:"année de parution", a:[
+    ["L'École des sorciers",30,1997,"sorciers","ecole","premier"],["La Chambre des secrets",14,1998,"chambre","secrets"],["Le Prisonnier d'Azkaban",17,1999,"azkaban","prisonnier"],
+    ["La Coupe de feu",14,2000,"coupe"],["L'Ordre du phénix",8,2003,"phenix","ordre"],["Le Prince de sang-mêlé",6,2005,"sang mele","prince"],["Les Reliques de la Mort",11,2007,"reliques"]]},
+  { theme:"Fiction", q:"Cite un roman de Jules Verne", y:"année de parution", a:[
+    ["Cinq semaines en ballon",4,1863,"ballon"],["Voyage au centre de la Terre",20,1864,"centre de la terre"],["De la Terre à la Lune",11,1865,"lune"],
+    ["Les Enfants du capitaine Grant",2,1868,"capitaine grant","grant"],["Vingt mille lieues sous les mers",25,1870,"vingt mille lieues","20000 lieues","20 000 lieues","lieues"],
+    ["Le Tour du monde en 80 jours",28,1872,"tour du monde","80 jours","quatre vingts jours"],["L'Île mystérieuse",5,1875,"ile mysterieuse"],["Michel Strogoff",5,1876,"strogoff"]]},
+  { theme:"Fiction", q:"Cite un super-héros Marvel", y:"première apparition en comics", a:[
+    ["Groot",1,1960],["Captain America",10,1941],["Thor",8,1962],["Hulk",9,1962],["Spider-Man",22,1962,"spiderman","spider man"],["Ant-Man",2,1962,"antman"],
+    ["Iron Man",18,1963,"ironman"],["Doctor Strange",3,1963,"docteur strange"],["Black Widow",3,1964,"veuve noire"],["Hawkeye",1,1964,"oeil de faucon"],
+    ["Daredevil",1,1964],["Black Panther",4,1966],["Captain Marvel",2,1968],["Wolverine",7,1974,"serval"],["Deadpool",6,1991]]},
+  { theme:"Films", q:"Cite un film de Christopher Nolan", y:"année de sortie", a:[
+    ["Following",1,1998],["Memento",4,2000],["Insomnia",1,2002],["Batman Begins",5,2005],["Le Prestige",5,2006,"prestige"],["The Dark Knight",13,2008,"dark knight"],
+    ["Inception",22,2010],["The Dark Knight Rises",5,2012,"dark knight rises"],["Interstellar",24,2014],["Dunkerque",3,2017,"dunkirk"],["Tenet",5,2020],["Oppenheimer",12,2023]]},
+  { theme:"Films", q:"Cite un film Pixar", y:"année de sortie", a:[
+    ["Toy Story",20,1995],["1001 pattes",2,1998,"mille et une pattes"],["Toy Story 2",2,1999],["Monstres & Cie",8,2001,"monstres et cie","monstres"],
+    ["Le Monde de Nemo",14,2003,"nemo"],["Les Indestructibles",7,2004,"indestructibles"],["Cars",9,2006],["Ratatouille",10,2007],["WALL-E",5,2008,"walle","wall e"],
+    ["Là-haut",6,2009,"la haut"],["Toy Story 3",2,2010],["Rebelle",1,2012],["Vice-Versa",5,2015,"vice versa"],["Coco",6,2017],["Soul",1,2020],
+    ["Luca",1,2021],["Alerte rouge",0.5,2022],["Élémentaire",0.5,2023],["Vice-Versa 2",1,2024,"vice versa 2"]]},
+  { theme:"Séries", q:"Cite une série originale Netflix", y:"année de lancement", a:[
+    ["House of Cards",4,2013],["Orange Is the New Black",2,2013,"orange is the new black","oitnb"],["Narcos",6,2015],["Stranger Things",22,2016],
+    ["The Crown",5,2016,"crown"],["Dark",3,2017],["The Witcher",4,2019,"witcher"],["Sex Education",5,2019],["La Chronique des Bridgerton",4,2020,"bridgerton"],
+    ["Lupin",7,2021],["Squid Game",15,2021],["Mercredi",8,2022,"wednesday"]]},
+  { theme:"Séries", q:"Cite une sitcom américaine", y:"année de lancement", a:[
+    ["I Love Lucy",1,1951],["Les Simpson",8,1989,"simpson","simpsons"],["Seinfeld",3,1989],["Friends",30,1994],["That '70s Show",3,1998,"that 70s show","70s show"],
+    ["Malcolm",8,2000],["Scrubs",3,2001],["How I Met Your Mother",12,2005,"himym"],["The Office",8,2005,"office"],["The Big Bang Theory",13,2007,"big bang theory","big bang"],
+    ["Parks and Recreation",2,2009,"parks and rec","parks and recreation"],["Modern Family",4,2009],["Brooklyn Nine-Nine",5,2013,"brooklyn 99","brooklyn nine nine","b99"]]},
+  { theme:"Sport", q:"Cite un pays champion du monde de football", y:"premier titre", a:[
+    ["Uruguay",4,1930],["Italie",14,1934],["Allemagne",17,1954],["Brésil",24,1958],["Angleterre",5,1966],["Argentine",15,1978],["France",19,1998],["Espagne",8,2010]]},
+  { theme:"Sport", q:"Cite un vainqueur du Ballon d'or", y:"premier Ballon d'or", a:[
+    ["Stanley Matthews",0.5,1956,"matthews"],["Alfredo Di Stéfano",1,1957,"di stefano"],["Johan Cruyff",3,1971,"cruyff"],["Michel Platini",7,1983,"platini"],
+    ["Marco van Basten",2,1988,"van basten"],["Zinédine Zidane",14,1998,"zidane","zizou"],["Ronaldo",8,1997],["Ronaldinho",6,2005],["Kaká",3,2007,"kaka"],
+    ["Cristiano Ronaldo",18,2008,"cr7","cristiano"],["Lionel Messi",24,2009,"messi"],["Luka Modrić",3,2018,"modric"],["Karim Benzema",6,2022,"benzema"],["Rodri",2,2024]]},
+];
+
+const MODES = [
+  { id:"plus",   name:"La plus citée",   goal:"Donne la réponse que le plus de gens citeraient.", pts:(a,q)=>a[1]/max(q,1) },
+  { id:"moins",  name:"La moins citée",  goal:"Donne une réponse juste que presque personne ne citerait.", pts:(a,q)=>1-a[1]/max(q,1) },
+  { id:"recent", name:"La plus récente", goal:"Donne la réponse la plus récente possible.", pts:(a,q)=>span(a,q) },
+  { id:"ancien", name:"La plus ancienne",goal:"Donne la réponse la plus ancienne possible.", pts:(a,q)=>1-span(a,q) },
+];
+const max = (q,i) => Math.max(...q.a.map(a=>a[i]));
+const min = (q,i) => Math.min(...q.a.map(a=>a[i]));
+const span = (a,q) => (a[2]-min(q,2)) / ((max(q,2)-min(q,2)) || 1);
+const points = (a,q,m) => Math.round(m.pts(a,q)*100);
+
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/&/g," et ").replace(/[^a-z0-9]+/g," ").trim();
+// Réponse reconnue si un alias apparaît comme mot(s) entier(s) ; le plus long alias gagne (« toy story 2 » bat « toy story »).
+function match(input, q) {
+  const n = " " + norm(input) + " ";
+  let best = null, len = 0;
+  for (const a of q.a) for (const x of [a[0], ...a.slice(3)]) {
+    const k = norm(x);
+    if (k && n.includes(" " + k + " ") && k.length > len) { best = a; len = k.length; }
+  }
+  return best;
+}
+
+const $ = id => document.getElementById(id);
+const ROUNDS = 5, TIME = 20;
+let mode = MODES[1], theme = "Tous", deck, round, total, timer, left;
+
+// Menu
+for (const m of MODES) {
+  const b = document.createElement("button");
+  b.className = "mode"; b.innerHTML = `<b>${m.name}</b><small>${m.goal}</small>`;
+  b.setAttribute("aria-pressed", m === mode);
+  b.onclick = () => { mode = m; [...$("modes").children].forEach(c => c.setAttribute("aria-pressed", c === b)); };
+  $("modes").append(b);
+}
+for (const t of ["Tous", ...new Set(QUESTIONS.map(q=>q.theme))]) {
+  const b = document.createElement("button");
+  b.textContent = t; b.setAttribute("aria-pressed", t === theme);
+  b.onclick = () => { theme = t; [...$("themes").children].forEach(c => c.setAttribute("aria-pressed", c === b)); };
+  $("themes").append(b);
+}
+
+function show(id) { for (const s of ["menu","game","end"]) $(s).hidden = s !== id; }
+
+function start() {
+  deck = QUESTIONS.filter(q => theme === "Tous" || q.theme === theme).sort(() => Math.random() - .5).slice(0, ROUNDS);
+  round = 0; total = 0; show("game"); ask();
+}
+
+function ask() {
+  const q = deck[round];
+  $("round").textContent = `Manche ${round+1}/${deck.length} · ${q.theme}`;
+  $("score").textContent = `${total} pts`;
+  $("goal").textContent = mode.goal;
+  $("question").textContent = q.q;
+  $("ask").hidden = false; $("reveal").hidden = true;
+  $("answer").value = ""; $("answer").focus();
+  left = TIME; tick();
+  timer = setInterval(() => { left -= .25; tick(); if (left <= 0) answer(""); }, 250);
+}
+function tick() { $("timer").style.width = (left / TIME * 100) + "%"; }
+
+function answer(text) {
+  clearInterval(timer);
+  const q = deck[round], hit = text.trim() && match(text, q), p = hit ? points(hit, q, mode) : 0;
+  total += p;
+  $("score").textContent = `${total} pts`;
+  $("verdict").className = "verdict " + (hit ? "ok" : "ko");
+  $("verdict").textContent = hit ? `${hit[0]} : +${p} pts` : text.trim() ? `« ${text.trim()} » ne fait pas partie des réponses : 0 pt` : "Temps écoulé : 0 pt";
+  const sorted = [...q.a].sort((x,y) => points(y,q,mode) - points(x,q,mode));
+  $("best").textContent = `Meilleure réponse : ${sorted[0][0]}`;
+  $("list").innerHTML = sorted.map(a => `<li class="${a===hit?"me":""}"><span>${a[0]}</span><span class="meta">${a[1]} % · ${a[2]}</span><span class="pts"><i style="width:${points(a,q,mode)}%"></i></span></li>`).join("");
+  $("ask").hidden = true; $("reveal").hidden = false;
+  $("next").textContent = round + 1 < deck.length ? "Suivant" : "Voir le score";
+  $("next").focus();
+}
+
+$("start").onclick = start;
+$("again").onclick = () => show("menu");
+$("form").onsubmit = e => { e.preventDefault(); answer($("answer").value); };
+$("next").onclick = () => {
+  if (++round < deck.length) return ask();
+  $("final").textContent = `${total} pts`;
+  $("recap").textContent = `Mode « ${mode.name} » · thème ${theme} · sur ${deck.length * 100} possibles`;
+  show("end");
+};
+
+// Auto-vérif (console)
+const nolan = QUESTIONS.find(q => q.q.includes("Nolan")), pix = QUESTIONS.find(q => q.q.includes("Pixar"));
+console.assert(match("the dark knight rises", nolan)[0] === "The Dark Knight Rises");
+console.assert(match("Toy Story 2", pix)[0] === "Toy Story 2");
+console.assert(match("Toy story", pix)[0] === "Toy Story");
+console.assert(match("monstres & cie", pix)[0] === "Monstres & Cie");
+console.assert(match("oscars", pix) === null);
+console.assert(points(nolan.a.find(a=>a[0]==="Oppenheimer"), nolan, MODES[2]) === 100);
+</script>
+</body>
+</html>
