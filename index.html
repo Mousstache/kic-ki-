@@ -41,6 +41,22 @@
   li .pts { grid-column:1/-1; height:4px; background:var(--line); border-radius:9px; overflow:hidden; }
   li .pts i { display:block; height:100%; background:var(--ok); }
   .big { font-size:4rem; font-weight:900; color:var(--acc); margin:10px 0; }
+  .steps { display:flex; gap:6px; justify-content:center; margin:14px 0 4px; }
+  .steps span { width:30px; height:30px; border-radius:8px; background:var(--card); border:2px solid var(--line); display:grid; place-items:center; font-weight:900; color:#14111f; }
+  .steps .cur { border-color:var(--acc); }
+  .rank { text-align:center; color:var(--mut); font-size:.85rem; letter-spacing:.08em; text-transform:uppercase; }
+  .rank b { color:var(--acc); }
+  .card { border:2px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card); margin-top:18px; }
+  .banner { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; color:#14111f; font-weight:900; font-size:1.5rem; text-transform:uppercase; }
+  .banner small { font-size:.9rem; }
+  .card .body { padding:14px 16px; }
+  .card h3 { font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; color:var(--mut); margin:14px 0 6px; font-weight:600; }
+  .card li { background:transparent; padding:4px 0; grid-template-columns:1fr 120px 70px; align-items:center; border:0; }
+  .card li em { color:var(--acc); font-style:normal; }
+  .card li .pts { grid-column:auto; height:8px; }
+  .card li .pts i { background:var(--mut); }
+  .card li.me .pts i { background:var(--acc); }
+  @media (max-width:480px) { .card li { grid-template-columns:1fr 60px 64px; } }
   [hidden] { display:none !important; }
 </style>
 </head>
@@ -60,6 +76,8 @@
   <!-- JEU -->
   <section id="game" hidden>
     <div class="top"><span id="round"></span><span id="score"></span></div>
+    <div class="steps" id="steps" aria-hidden="true"></div>
+    <p class="rank" id="rank"></p>
     <p class="sub" id="goal"></p>
     <div class="q" id="question"></div>
     <div id="ask">
@@ -71,9 +89,14 @@
       <p class="verdict ko" id="wrong" role="alert" hidden></p>
     </div>
     <div id="reveal" hidden>
-      <div class="verdict" id="verdict"></div>
-      <p class="sub" id="best"></p>
-      <ol id="list"></ol>
+      <div class="card" role="status">
+        <div class="banner" id="banner"><span id="tierName"></span><span id="gain"></span></div>
+        <div class="body">
+          <div id="best"></div>
+          <h3>Exemples d'autres réponses</h3>
+          <ol id="list"></ol>
+        </div>
+      </div>
       <button class="go" id="next">Suivant</button>
     </div>
   </section>
@@ -82,6 +105,7 @@
   <section id="end" hidden>
     <h1>Partie <span>terminée</span></h1>
     <div class="big" id="final"></div>
+    <p class="rank" id="endRank"></p>
     <p class="sub" id="recap"></p>
     <button class="go" id="again">Rejouer</button>
   </section>
@@ -353,6 +377,29 @@ const QUESTIONS = [
     ["Ali G",18,1998],["Borat",45,2000,"borat sagdiyev"],["Brüno",9,2000,"bruno"],["Roi Julian",8,2005,"julian","king julien","roi julien"],["Jean Girard",1,2006],
     ["Adolfo Pirelli",1,2007,"pirelli"],["Inspecteur Gustave",1,2011,"gustave"],["Amiral Général Aladeen",9,2012,"aladeen"],["Thénardier",3,2012,"thenardier"],
     ["Nobby",1,2016,"nobby butcher"],["Erran Morad",1,2018,"morad"],["Eli Cohen",1,2019,"the spy"],["Abbie Hoffman",1,2020,"hoffman"]]},
+  // Contenu du film Borat (2006) : pas d'année, donc jouables seulement en modes plus/moins cité.
+  { theme:"Borat", q:"Cite un personnage du film Borat (2006)", a:[
+    ["Borat Sagdiyev",30,null,"borat"],["Azamat Bagatov",22,null,"azamat"],["Pamela Anderson",20,null,"pamela"],["Luenell",5,null],
+    ["Natalya",6,null,"natalia","la soeur","sa soeur"],["Nursultan Tulyakbay",3,null,"nursultan","tulyakbay","le voisin"],["Bilo",3,null,"le frere","son frere"],
+    ["Oxana",4,null,"la femme","sa femme"]]},
+  { theme:"Borat", q:"Cite un lieu des États-Unis où passe Borat dans le film", a:[
+    ["New York",38,null],["Washington",14,null],["Atlanta",5,null],["Virginie",4,null,"virginia","rodeo"],["Alabama",3,null,"birmingham"],
+    ["Mississippi",2,null],["Los Angeles",20,null,"hollywood"],["Californie",14,null,"california"]]},
+  { theme:"Borat", q:"Cite une scène culte du film Borat", a:[
+    ["Le combat tout nu avec Azamat",26,null,"combat","bagarre","nu","nus","tout nu"],["Le mankini à la plage",14,null,"mankini","maillot","plage"],
+    ["L'enlèvement de Pamela Anderson avec un sac",16,null,"enlevement","kidnapping","sac","pamela"],["L'hymne national au rodéo",10,null,"hymne","rodeo"],
+    ["La poule dans le métro",6,null,"poule","poulet","metro"],["Le dîner mondain",9,null,"diner","sac de caca","caca"],
+    ["Le magasin d'antiquités",6,null,"antiquites","antiquaire","vaisselle"],["Le cours de conduite",4,null,"conduite","auto ecole","moniteur"],
+    ["Les étudiants dans le camping-car",4,null,"etudiants","camping car","fraternite"],["L'église évangélique",3,null,"eglise","pentecotiste","evangelique"],
+    ["Le village au Kazakhstan",2,null,"village","kazakhstan","debut"]]},
+  { theme:"Borat", q:"Cite un objet ou animal marquant du film Borat", a:[
+    ["La poule",22,null,"poule","poulet"],["L'ours",18,null,"ours"],["Le camion de glaces",12,null,"camion","glace","glaces"],["Le mankini",24,null,"mankini","maillot"],
+    ["Le sac de mariage",10,null,"sac"],["La valise",4,null,"valise"],["Les cafards",4,null,"cafard","cafards"],["La vieille voiture tirée par un cheval",3,null,"voiture","cheval","charrette"],
+    ["Le magazine Alerte à Malibu",3,null,"alerte a malibu","baywatch","magazine"]]},
+  { theme:"Borat", q:"Cite une réplique ou expression culte de Borat", a:[
+    ["Very nice",32,null,"very nice","vereh nais","is nice","verry nice"],["Great success",18,null,"great success","grand succes"],["Jagshemash",8,null,"jagshemash","jak sie masz"],
+    ["Chenquieh",4,null,"chenquieh"],["My wife",14,null,"my wife","ma femme"],["High five",6,null,"high five"],["Sexy time",8,null,"sexy time"],
+    ["Wa wa wee wa",6,null,"wa wa wee wa","wawaweewa"],["Not !",4,null,"not"]]},
 ];
 
 const MODES = [
@@ -411,10 +458,24 @@ function show(id) { for (const s of ["menu","game","end"]) $(s).hidden = s !== i
 
 function start() {
   const rnd = theme === "Du jour" ? seeded(DAY + mode.id) : Math.random;
-  deck = QUESTIONS.filter(q => theme === "Du jour" || theme === "Tous" || q.theme === theme)
+  const dated = mode.id === "recent" || mode.id === "ancien";
+  deck = QUESTIONS.filter(q => (theme === "Du jour" || theme === "Tous" || q.theme === theme) && (q.y || !dated))
     .map(q => [rnd(), q]).sort((a,b) => a[0] - b[0]).map(x => x[1]).slice(0, ROUNDS);
   TIME = mode.id === "moins" ? 40 : 30;
-  round = 0; total = 0; show("game"); ask();
+  round = 0; total = 0; results = []; show("game"); ask();
+}
+
+// Palier d'une réponse selon ses points, et classement global selon le % de points obtenus.
+const TIERS = [[90,"Parfait","★","#ffcc33"],[70,"Excellent","✦","#3ddc97"],[40,"Bien","●","#5cb8ff"],[1,"Pas mal","◐","#c9b8ff"],[0,"Raté","✕","#ff5c7a"]];
+const tier = p => TIERS.find(t => p >= t[0]);
+const RANKS = [[90,"Légende"],[75,"Maître"],[55,"Expert"],[35,"Initié"],[15,"Apprenti"],[0,"Novice"]];
+const rankOf = pct => RANKS.find(r => pct >= r[0])[1];
+let results = [];
+function paintProgress() {
+  $("steps").innerHTML = deck.map((_, i) => { const t = results[i] != null && tier(results[i]);
+    return t ? `<span style="background:${t[3]};border-color:${t[3]}">${t[2]}</span>` : `<span class="${i === round ? "cur" : ""}"></span>`; }).join("");
+  const pct = results.length ? Math.round(total / (results.length * 100) * 100) : 0;
+  $("rank").innerHTML = results.length ? `Classement : <b>${rankOf(pct)}</b> · ${pct} % des points` : "Classement : —";
 }
 
 function ask() {
@@ -425,6 +486,7 @@ function ask() {
   $("question").textContent = q.q;
   $("ask").hidden = false; $("reveal").hidden = true;
   $("answer").value = ""; $("wrong").hidden = true;
+  paintProgress();
   left = TIME; tick(); run();
 }
 function run() {
@@ -445,11 +507,18 @@ function answer(text) {
   const p = hit ? points(hit, q, mode) : 0;
   total += p;
   $("score").textContent = `${total} pts`;
-  $("verdict").className = "verdict " + (hit ? "ok" : "ko");
-  $("verdict").textContent = hit ? `${hit[0]} : +${p} pts` : "Temps écoulé : 0 pt";
+  results.push(p); paintProgress();
+  const t = hit ? tier(p) : TIERS[TIERS.length - 1];
+  $("banner").style.background = t[3];
+  $("tierName").textContent = `${t[2]} ${hit ? t[1] : "Temps écoulé"}`;
+  $("gain").innerHTML = `+${p} <small>pts</small>`;
   const sorted = [...q.a].sort((x,y) => points(y,q,mode) - points(x,q,mode));
-  $("best").textContent = `Meilleure réponse : ${sorted[0][0]}`;
-  $("list").innerHTML = sorted.map(a => `<li class="${a===hit?"me":""}"><span>${a[0]}</span><span class="meta">${a[1]} % · ${a[2] < 0 ? -a[2] + " av. J.-C." : a[2]}</span><span class="pts"><i style="width:${points(a,q,mode)}%"></i></span></li>`).join("");
+  const pos = hit && 1 + q.a.filter(a => points(a,q,mode) > p).length; // ex æquo = même rang
+  $("best").textContent = hit ? `« ${hit[0]} » : c'est la réponse n° ${pos} sur ${q.a.length}.` : `La meilleure réponse était « ${sorted[0][0]} ».`;
+  const shown = sorted.slice(0, 5);
+  if (hit && !shown.includes(hit)) shown.push(hit);
+  const maxPop = max(q,1);
+  $("list").innerHTML = shown.map(a => `<li class="${a===hit?"me":""}"><span>${a[0]}${a===hit?" <em>(toi)</em>":""}</span><span class="pts"><i style="width:${a[1]/maxPop*100}%"></i></span><span class="meta">${a[2] == null || !q.y || mode.id === "plus" || mode.id === "moins" ? a[1] + " %" : (a[2] < 0 ? -a[2] + " av. J.-C." : a[2])}</span></li>`).join("");
   $("ask").hidden = true; $("reveal").hidden = false;
   $("next").textContent = round + 1 < deck.length ? "Suivant" : "Voir le score";
   $("next").focus();
@@ -461,6 +530,8 @@ $("form").onsubmit = e => { e.preventDefault(); answer($("answer").value); };
 $("next").onclick = () => {
   if (++round < deck.length) return ask();
   $("final").textContent = `${total} pts`;
+  const pct = Math.round(total / (deck.length * 100) * 100);
+  $("endRank").innerHTML = `Classement : <b>${rankOf(pct)}</b> · ${pct} % des points`;
   $("recap").textContent = `Mode « ${mode.name} » · thème ${theme} · sur ${deck.length * 100} possibles`;
   if (theme === "Du jour") { store.set(`jour-${DAY}-${mode.id}`, total); paintModes(); }
   show("end");
@@ -474,8 +545,9 @@ console.assert(match("Toy story", pix)[0] === "Toy Story");
 console.assert(match("monstres & cie", pix)[0] === "Monstres & Cie");
 console.assert(match("oscars", pix) === null);
 // Chaque réponse doit être reconnue par son propre nom, et les données bien formées.
-for (const q of QUESTIONS) for (const a of q.a) console.assert(match(a[0], q) === a && typeof a[1] === "number" && Number.isInteger(a[2]), q.q, a[0]);
+for (const q of QUESTIONS) for (const a of q.a) console.assert(match(a[0], q) === a && typeof a[1] === "number" && (q.y ? Number.isInteger(a[2]) : a[2] === null), q.q, a[0]);
 { const r1 = seeded("x"), r2 = seeded("x"), v = r1(); console.assert(v === r2() && v >= 0 && v < 1); }
+console.assert(tier(100)[1] === "Parfait" && tier(0)[1] === "Raté" && rankOf(56) === "Expert" && rankOf(0) === "Novice");
 console.assert(points(nolan.a.find(a=>a[0]==="Oppenheimer"), nolan, MODES[2]) === 100);
 </script>
 </body>
