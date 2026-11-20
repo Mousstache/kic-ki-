@@ -20,6 +20,7 @@
   button[aria-pressed="true"] { border-color:var(--acc); background:#2d2640; }
   .mode b { display:block; font-size:1.1rem; }
   .mode small { color:var(--mut); }
+  .mode .done { display:block; margin-top:6px; color:var(--ok); font-weight:700; }
   .chips { display:flex; flex-wrap:wrap; gap:8px; }
   .chips button { padding:8px 14px; border-radius:999px; }
   .go { display:block; width:100%; margin-top:28px; background:var(--acc); color:#14111f; border-color:var(--acc); font-weight:800; font-size:1.2rem; text-align:center; }
@@ -53,7 +54,7 @@
     <div class="grid" id="modes"></div>
     <h2>Thème</h2>
     <div class="chips" id="themes"></div>
-    <button class="go" id="start">Jouer (5 manches · 20 s)</button>
+    <button class="go" id="start">Jouer (7 questions)</button>
   </section>
 
   <!-- JEU -->
@@ -67,6 +68,7 @@
         <input id="answer" aria-label="Ta réponse" placeholder="Ta réponse…">
         <button>Valider</button>
       </form>
+      <p class="verdict ko" id="wrong" role="alert" hidden></p>
     </div>
     <div id="reveal" hidden>
       <div class="verdict" id="verdict"></div>
@@ -150,6 +152,207 @@ const QUESTIONS = [
     ["Stanley Matthews",0.5,1956,"matthews"],["Alfredo Di Stéfano",1,1957,"di stefano"],["Johan Cruyff",3,1971,"cruyff"],["Michel Platini",7,1983,"platini"],
     ["Marco van Basten",2,1988,"van basten"],["Zinédine Zidane",14,1998,"zidane","zizou"],["Ronaldo",8,1997],["Ronaldinho",6,2005],["Kaká",3,2007,"kaka"],
     ["Cristiano Ronaldo",18,2008,"cr7","cristiano"],["Lionel Messi",24,2009,"messi"],["Luka Modrić",3,2018,"modric"],["Karim Benzema",6,2022,"benzema"],["Rodri",2,2024]]},
+  // --- Ajouts ---
+  { theme:"Culture G", q:"Cite un compositeur de musique classique", y:"année de naissance", a:[
+    ["Vivaldi",8,1678],["Bach",14,1685],["Haendel",2,1685,"handel"],["Haydn",2,1732],["Mozart",28,1756],["Beethoven",22,1770],["Schubert",3,1797],
+    ["Chopin",8,1810],["Liszt",2,1811],["Wagner",3,1813],["Verdi",2,1813],["Bizet",1,1838],["Tchaïkovski",3,1840,"tchaikovsky"],["Debussy",2,1862],["Satie",1,1866],["Ravel",2,1875]]},
+  { theme:"Culture G", q:"Cite un scientifique célèbre", y:"année de naissance", a:[
+    ["Archimède",3,-287],["Copernic",2,1473],["Galilée",7,1564,"galileo"],["Isaac Newton",14,1643,"newton"],["Lavoisier",2,1743],["Charles Darwin",8,1809,"darwin"],
+    ["Louis Pasteur",9,1822,"pasteur"],["Mendeleïev",1,1834,"mendeleiev"],["Edison",4,1847],["Nikola Tesla",5,1856,"tesla"],["Freud",2,1856],["Marie Curie",12,1867,"curie"],
+    ["Albert Einstein",28,1879,"einstein"],["Stephen Hawking",3,1942,"hawking"]]},
+  { theme:"Culture G", q:"Cite un philosophe", y:"année de naissance", a:[
+    ["Confucius",2,-551],["Socrate",18,-470],["Platon",14,-428],["Aristote",12,-384],["Descartes",10,1596],["Pascal",3,1623],["Spinoza",2,1632],["Voltaire",6,1694],
+    ["Rousseau",6,1712],["Kant",5,1724],["Hegel",2,1770],["Karl Marx",4,1818,"marx"],["Nietzsche",8,1844],["Sartre",4,1905],["Simone de Beauvoir",2,1908,"beauvoir"],["Albert Camus",2,1913,"camus"]]},
+  { theme:"Culture G", q:"Cite un réseau social", y:"année de lancement", a:[
+    ["Skyrock",0.5,2002,"skyblog"],["MySpace",1,2003],["LinkedIn",3,2003],["Facebook",22,2004],["YouTube",6,2005],["Reddit",2,2005],["Twitter",10,2006,"x"],
+    ["Tumblr",1,2007],["WhatsApp",4,2009],["Instagram",18,2010,"insta"],["Pinterest",2,2010],["Snapchat",12,2011,"snap"],["Twitch",2,2011],["Discord",2,2015],
+    ["TikTok",14,2016],["BeReal",1,2020],["Threads",0.5,2023]]},
+  { theme:"Culture G", q:"Cite une console de jeux vidéo", y:"année de sortie", a:[
+    ["Atari 2600",2,1977,"atari"],["NES",4,1983,"nintendo entertainment system","famicom"],["Mega Drive",3,1988,"megadrive"],["Game Boy",8,1989,"gameboy"],
+    ["Super Nintendo",4,1990,"snes","super nes"],["PlayStation",10,1994,"ps1","playstation 1"],["Nintendo 64",3,1996,"n64"],["Dreamcast",1,1998],
+    ["PlayStation 2",8,2000,"ps2"],["GameCube",2,2001,"game cube"],["Xbox",5,2001],["Nintendo DS",4,2004,"ds"],["Xbox 360",3,2005],["Wii",7,2006],
+    ["PlayStation 3",3,2006,"ps3"],["PlayStation 4",5,2013,"ps4"],["Xbox One",2,2013],["Nintendo Switch",12,2017,"switch"],["PlayStation 5",10,2020,"ps5"],["Switch 2",3,2025,"nintendo switch 2"]]},
+  { theme:"Culture G", q:"Cite un langage de programmation", y:"année de création", a:[
+    ["Fortran",1,1957],["COBOL",1,1959],["BASIC",1,1964],["C",8,1972,"langage c"],["C++",7,1985,"c plus plus","cpp"],["Python",24,1991],["Java",14,1995],
+    ["JavaScript",14,1995,"js"],["PHP",6,1995],["Ruby",2,1995],["C#",4,2000,"c sharp","csharp"],["Go",2,2009,"golang"],["Rust",3,2010],["Kotlin",1,2011],["Swift",2,2014]]},
+
+  { theme:"Histoire", q:"Cite un empereur romain", y:"début du règne", a:[
+    ["Auguste",14,-27,"octave"],["Tibère",4,14],["Caligula",12,37],["Claude",3,41],["Néron",22,54],["Vespasien",3,69],["Titus",2,79],["Trajan",4,98],
+    ["Hadrien",5,117],["Marc Aurèle",8,161,"marc aurele"],["Commode",4,180],["Caracalla",2,211],["Dioclétien",2,284],["Constantin",6,306]]},
+  { theme:"Histoire", q:"Cite une guerre célèbre", y:"année de début", a:[
+    ["Guerres puniques",1,-264,"puniques"],["Guerre de Cent Ans",10,1337,"cent ans"],["Guerres de Religion",3,1562,"religion"],["Guerre de Trente Ans",2,1618,"trente ans"],
+    ["Guerre de Sept Ans",1,1756,"sept ans"],["Guerre d'indépendance américaine",2,1775,"independance americaine"],["Guerre de Sécession",5,1861,"secession"],
+    ["Guerre franco-prussienne",2,1870,"franco prussienne","guerre de 1870"],["Première Guerre mondiale",22,1914,"premiere guerre mondiale","14 18","1914 1918","grande guerre"],
+    ["Seconde Guerre mondiale",25,1939,"seconde guerre mondiale","deuxieme guerre mondiale","39 45","1939 1945"],["Guerre froide",6,1947,"froide"],["Guerre de Corée",1,1950,"coree"],
+    ["Guerre d'Algérie",5,1954,"algerie"],["Guerre du Vietnam",7,1955,"vietnam"],["Guerre du Golfe",3,1990,"golfe"],["Guerre d'Irak",2,2003,"irak"],["Guerre en Ukraine",3,2022,"ukraine"]]},
+  { theme:"Histoire", q:"Cite un grand explorateur ou voyageur", y:"année du voyage marquant", a:[
+    ["Leif Erikson",1,1000,"erikson"],["Marco Polo",14,1271],["Ibn Battuta",1,1325],["Christophe Colomb",30,1492,"colomb"],["Vasco de Gama",8,1497,"gama"],
+    ["Amerigo Vespucci",3,1499,"vespucci"],["Magellan",12,1519],["Jacques Cartier",5,1534,"cartier"],["Samuel de Champlain",2,1603,"champlain"],["James Cook",5,1768,"cook"],
+    ["Roald Amundsen",2,1911,"amundsen"],["Youri Gagarine",3,1961,"gagarine"],["Neil Armstrong",9,1969,"armstrong"]]},
+  { theme:"Histoire", q:"Cite un pharaon d'Égypte", y:"début du règne (approx.)", a:[
+    ["Djéser",2,-2670,"djeser"],["Khéops",14,-2589,"kheops"],["Khéphren",6,-2558,"khephren"],["Hatchepsout",5,-1479],["Thoutmôsis III",2,-1479,"thoutmosis"],
+    ["Akhenaton",5,-1353],["Toutânkhamon",30,-1332,"toutankhamon","toutankhamon"],["Ramsès II",25,-1279,"ramses"],["Cléopâtre",11,-51,"cleopatre"]]},
+  { theme:"Histoire", q:"Cite une révolution", y:"année de début", a:[
+    ["Glorieuse Révolution",1,1688,"glorieuse"],["Révolution industrielle",8,1760,"industrielle"],["Révolution américaine",4,1775,"americaine"],["Révolution française",35,1789,"francaise","1789"],
+    ["Révolution haïtienne",1,1791,"haitienne"],["Révolution de Juillet",3,1830,"juillet","trois glorieuses"],["Révolution de 1848",3,1848,"1848"],["Révolution mexicaine",1,1910,"mexicaine"],
+    ["Révolution russe",15,1917,"russe","octobre"],["Révolution chinoise",3,1949,"chinoise"],["Révolution cubaine",6,1953,"cubaine"],["Révolution des Œillets",1,1974,"oeillets"],
+    ["Révolution iranienne",3,1979,"iranienne"],["Révolution de velours",1,1989,"velours"],["Printemps arabe",6,2010,"printemps arabe","tunisienne","revolution du jasmin"]]},
+
+  { theme:"Géographie", q:"Cite un pays d'Afrique", y:"année d'indépendance", a:[
+    ["Libéria",0.5,1847,"liberia"],["Afrique du Sud",6,1910],["Égypte",8,1922,"egypte"],["Libye",2,1951],["Maroc",14,1956],["Tunisie",8,1956],["Ghana",2,1957],
+    ["Guinée",1,1958,"guinee"],["Sénégal",9,1960,"senegal"],["Mali",5,1960],["Côte d'Ivoire",7,1960,"cote d ivoire","cote divoire"],["Cameroun",5,1960],
+    ["Madagascar",3,1960],["Nigeria",3,1960],["RDC",2,1960,"republique democratique du congo"],["Congo",2,1960],["Burkina Faso",2,1960,"burkina"],["Niger",1,1960],
+    ["Tchad",1,1960],["Gabon",1,1960],["Tanzanie",1,1961],["Algérie",12,1962,"algerie"],["Kenya",2,1963],["Angola",1,1975],["Mozambique",1,1975],
+    ["Zimbabwe",1,1980],["Namibie",0.5,1990],["Érythrée",0.5,1993,"erythree"],["Soudan du Sud",0.5,2011]]},
+  { theme:"Géographie", q:"Cite un État américain", y:"année d'entrée dans l'Union", a:[
+    ["Delaware",1,1787],["Pennsylvanie",2,1787,"pennsylvania"],["New Jersey",3,1787],["Géorgie",2,1788,"georgie","georgia"],["Massachusetts",2,1788],
+    ["Caroline du Sud",1,1788,"south carolina"],["Virginie",2,1788,"virginia"],["New York",12,1788],["Caroline du Nord",1,1789,"north carolina"],["Kentucky",1,1792],
+    ["Tennessee",1,1796],["Ohio",2,1803],["Louisiane",3,1812,"louisiana"],["Illinois",2,1818],["Michigan",1,1837],["Floride",8,1845,"florida"],["Texas",14,1845],
+    ["Californie",18,1850,"california"],["Nevada",3,1864],["Colorado",2,1876],["Montana",1,1889],["Washington",2,1889],["Utah",1,1896],["Oklahoma",1,1907],
+    ["Arizona",2,1912],["Nouveau-Mexique",1,1912,"nouveau mexique","new mexico"],["Alaska",4,1959],["Hawaï",4,1959,"hawai","hawaii"]]},
+  { theme:"Géographie", q:"Cite une ville ayant accueilli les JO d'hiver", y:"premiers JO d'hiver accueillis", a:[
+    ["Chamonix",8,1924],["Saint-Moritz",2,1928,"st moritz"],["Lake Placid",2,1932],["Garmisch-Partenkirchen",1,1936,"garmisch"],["Oslo",3,1952],["Cortina d'Ampezzo",2,1956,"cortina"],
+    ["Squaw Valley",1,1960],["Innsbruck",2,1964],["Grenoble",9,1968],["Sapporo",1,1972],["Sarajevo",2,1984],["Calgary",3,1988],["Albertville",12,1992],
+    ["Lillehammer",3,1994],["Nagano",3,1998],["Salt Lake City",3,2002],["Turin",4,2006],["Vancouver",7,2010],["Sotchi",6,2014,"sochi"],["Pyeongchang",4,2018],
+    ["Pékin",6,2022,"pekin","beijing"],["Milan",5,2026]]},
+  { theme:"Géographie", q:"Cite un monument célèbre", y:"début de construction", a:[
+    ["Pyramide de Khéops",8,-2560,"pyramide","pyramides","kheops"],["Grande Muraille de Chine",6,-220,"muraille"],["Parthénon",3,-447,"parthenon"],["Colisée",7,70,"colisee"],
+    ["Notre-Dame de Paris",6,1163,"notre dame"],["Machu Picchu",3,1450],["Château de Versailles",4,1623,"versailles"],["Taj Mahal",6,1632],["Arc de Triomphe",4,1806],
+    ["Big Ben",4,1843],["Statue de la Liberté",9,1875,"statue de la liberte"],["Sagrada Família",2,1882,"sagrada familia"],["Tour Eiffel",22,1887,"eiffel"],
+    ["Christ Rédempteur",2,1922,"christ redempteur"],["Empire State Building",3,1930,"empire state"],["Opéra de Sydney",2,1959,"opera de sydney"],["Burj Khalifa",3,2004]]},
+
+  { theme:"Fiction", q:"Cite un personnage principal d'un Disney", y:"première apparition", a:[
+    ["Mickey",10,1928],["Blanche-Neige",8,1937,"blanche neige"],["Pinocchio",3,1940],["Dumbo",2,1941],["Bambi",3,1942],["Cendrillon",7,1950],["Alice",2,1951],
+    ["Peter Pan",4,1953],["Aurore",2,1959,"belle au bois dormant"],["Mowgli",3,1967],["Ariel",6,1989,"petite sirene"],["Belle",4,1991],["Aladdin",5,1992],
+    ["Simba",11,1994,"roi lion"],["Pocahontas",2,1995],["Mulan",4,1998],["Tarzan",2,1999],["Stitch",4,2002,"lilo"],["Raiponce",3,2010],["Elsa",8,2013,"reine des neiges"],
+    ["Vaiana",3,2016,"moana"],["Mirabel",1,2021,"encanto"]]},
+  { theme:"Fiction", q:"Cite un roman de Victor Hugo", y:"année de parution", a:[
+    ["Han d'Islande",1,1823,"han d islande"],["Bug-Jargal",0.5,1826,"bug jargal"],["Le Dernier Jour d'un condamné",8,1829,"dernier jour"],["Notre-Dame de Paris",28,1831,"notre dame"],
+    ["Les Misérables",55,1862,"miserables"],["Les Travailleurs de la mer",3,1866,"travailleurs"],["L'Homme qui rit",3,1869,"homme qui rit"],["Quatrevingt-treize",1.5,1874,"quatrevingt treize","93"]]},
+  { theme:"Fiction", q:"Cite un manga", y:"début de publication", a:[
+    ["Astro Boy",1,1952],["Captain Tsubasa",3,1981,"olive et tom"],["Dragon Ball",16,1984,"dbz"],["Les Chevaliers du Zodiaque",3,1986,"saint seiya","chevaliers du zodiaque"],
+    ["JoJo's Bizarre Adventure",2,1987,"jojo"],["Berserk",2,1989],["Slam Dunk",2,1990],["Sailor Moon",3,1991],["One Piece",20,1997],["Hunter x Hunter",3,1998,"hunter hunter","hxh"],
+    ["Naruto",18,1999],["Bleach",4,2001],["Fullmetal Alchemist",3,2001,"fma"],["Death Note",7,2003],["L'Attaque des Titans",8,2009,"attaque des titans","shingeki","snk"],
+    ["One-Punch Man",2,2009,"one punch man"],["My Hero Academia",3,2014,"mha"],["Demon Slayer",4,2016,"kimetsu"],["Jujutsu Kaisen",4,2018,"jjk"],["Chainsaw Man",2,2018],["Spy x Family",1,2019,"spy family"]]},
+  { theme:"Fiction", q:"Cite un méchant de fiction célèbre", y:"première apparition", a:[
+    ["Moriarty",2,1893],["Dracula",6,1897],["Capitaine Crochet",4,1904,"crochet"],["Fantômas",1,1911,"fantomas"],["Gollum",3,1937],["Joker",18,1940],["Lex Luthor",2,1940,"luthor"],
+    ["Sauron",5,1954],["Cruella",3,1956],["Docteur Fatalis",1,1962,"dr doom","doctor doom","fatalis"],["Magneto",2,1963],["Thanos",6,1973],["Dark Vador",20,1977,"vador","darth vader"],
+    ["Hannibal Lecter",4,1981,"hannibal"],["Freddy Krueger",3,1984,"freddy"],["Bowser",2,1985],["Grippe-Sou",2,1986,"pennywise","clown ca"],["Ursula",1,1989],["Jafar",2,1992],
+    ["Scar",4,1994],["Joffrey",1,1996],["Voldemort",14,1997]]},
+  { theme:"Fiction", q:"Cite un héros de BD franco-belge", y:"première apparition", a:[
+    ["Tintin",30,1929],["Spirou",5,1938],["Lucky Luke",10,1946],["Blake et Mortimer",3,1946,"blake","mortimer"],["Marsupilami",2,1952],["Gaston Lagaffe",8,1957,"gaston"],
+    ["Les Schtroumpfs",6,1958,"schtroumpf","schtroumpfs"],["Astérix",20,1959,"asterix"],["Boule et Bill",4,1959,"boule"],["Iznogoud",1,1962],["Achille Talon",1,1963],
+    ["Valérian",1,1967,"valerian"],["Les Tuniques bleues",1,1968,"tuniques bleues"],["Yoko Tsuno",0.5,1970],["Thorgal",1,1977],["XIII",1,1984,"13"],["Largo Winch",1,1990,"largo"],["Titeuf",5,1992]]},
+
+  { theme:"Films", q:"Cite un film Star Wars", y:"année de sortie", a:[
+    ["Un nouvel espoir",14,1977,"nouvel espoir","episode 4","episode iv"],["L'Empire contre-attaque",14,1980,"empire contre attaque","episode 5","episode v"],
+    ["Le Retour du Jedi",10,1983,"retour du jedi","episode 6","episode vi"],["La Menace fantôme",12,1999,"menace fantome","episode 1","episode i"],
+    ["L'Attaque des clones",7,2002,"attaque des clones","episode 2","episode ii"],["La Revanche des Sith",12,2005,"revanche des sith","episode 3","episode iii"],
+    ["Le Réveil de la Force",9,2015,"reveil de la force","episode 7","episode vii"],["Rogue One",6,2016],["Les Derniers Jedi",5,2017,"derniers jedi","episode 8","episode viii"],
+    ["Solo",3,2018],["L'Ascension de Skywalker",5,2019,"ascension de skywalker","episode 9","episode ix"]]},
+  { theme:"Films", q:"Cite un acteur ayant joué James Bond", y:"premier film en Bond", a:[
+    ["Sean Connery",30,1962,"connery"],["George Lazenby",2,1969,"lazenby"],["Roger Moore",18,1973,"moore"],["Timothy Dalton",4,1987,"dalton"],
+    ["Pierce Brosnan",18,1995,"brosnan"],["Daniel Craig",28,2006,"craig"]]},
+  { theme:"Films", q:"Cite un film de Steven Spielberg", y:"année de sortie", a:[
+    ["Duel",1,1971],["Les Dents de la mer",12,1975,"dents de la mer","jaws"],["Rencontres du troisième type",2,1977,"troisieme type"],
+    ["Les Aventuriers de l'arche perdue",8,1981,"arche perdue","indiana jones"],["E.T.",18,1982,"e t","et l extraterrestre","extra terrestre"],
+    ["Indiana Jones et le Temple maudit",2,1984,"le temple maudit"],["La Couleur pourpre",1,1985,"couleur pourpre"],["Indiana Jones et la Dernière Croisade",2,1989,"derniere croisade"],
+    ["Hook",2,1991],["Jurassic Park",20,1993],["La Liste de Schindler",8,1993,"schindler"],["Il faut sauver le soldat Ryan",8,1998,"soldat ryan"],["A.I.",1,2001,"a i","intelligence artificielle"],
+    ["Minority Report",2,2002],["Arrête-moi si tu peux",3,2002,"arrete moi si tu peux","catch me if you can"],["La Guerre des mondes",2,2005,"guerre des mondes"],
+    ["Les Aventures de Tintin",1,2011,"tintin"],["Lincoln",1,2012],["Ready Player One",3,2018],["West Side Story",1,2021],["The Fabelmans",1,2022,"fabelmans"]]},
+  { theme:"Films", q:"Cite un film du studio Ghibli", y:"année de sortie", a:[
+    ["Nausicaä de la vallée du vent",2,1984,"nausicaa"],["Le Château dans le ciel",4,1986,"chateau dans le ciel","laputa"],["Mon voisin Totoro",18,1988,"totoro"],
+    ["Le Tombeau des lucioles",5,1988,"tombeau des lucioles"],["Kiki la petite sorcière",4,1989,"kiki"],["Porco Rosso",3,1992],["Pompoko",1,1994],
+    ["Princesse Mononoké",14,1997,"mononoke"],["Le Voyage de Chihiro",28,2001,"chihiro"],["Le Château ambulant",9,2004,"chateau ambulant","hauru"],["Ponyo sur la falaise",4,2008,"ponyo"],
+    ["Arrietty",2,2010],["Le vent se lève",2,2013,"vent se leve"],["Le Conte de la princesse Kaguya",1,2013,"kaguya"],["Souvenirs de Marnie",1,2014,"marnie"],["Le Garçon et le Héron",2,2023,"heron"]]},
+  { theme:"Films", q:"Cite un film Oscar du meilleur film", y:"année de sortie", a:[
+    ["Autant en emporte le vent",6,1939,"autant en emporte"],["Casablanca",4,1942],["Ben-Hur",5,1959,"ben hur"],["West Side Story",2,1961],["Le Parrain",14,1972,"parrain"],
+    ["Rocky",4,1976],["Gandhi",1,1982],["Amadeus",2,1984],["Rain Man",2,1988],["Le Silence des agneaux",5,1991,"silence des agneaux"],["Forrest Gump",9,1994],
+    ["Braveheart",3,1995],["Titanic",16,1997],["Gladiator",8,2000],["Le Retour du roi",4,2003,"retour du roi","seigneur des anneaux"],["Slumdog Millionaire",2,2008,"slumdog"],
+    ["The Artist",4,2011,"artist"],["Green Book",1,2018],["Parasite",4,2019],["Oppenheimer",3,2023],["Anora",1,2024]]},
+  { theme:"Films", q:"Cite un film français culte", y:"année de sortie", a:[
+    ["Les Tontons flingueurs",6,1963,"tontons flingueurs"],["Le Corniaud",2,1965,"corniaud"],["La Grande Vadrouille",8,1966,"grande vadrouille"],["Les Bronzés",5,1978,"bronzes"],
+    ["Le Père Noël est une ordure",6,1982,"pere noel est une ordure"],["Le Grand Bleu",2,1988,"grand bleu"],["Les Visiteurs",14,1993,"visiteurs"],["La Cité de la peur",4,1994,"cite de la peur"],
+    ["Léon",2,1994,"leon"],["La Haine",5,1995,"haine"],["Le Cinquième Élément",3,1997,"cinquieme element"],["Le Dîner de cons",9,1998,"diner de cons"],["Taxi",3,1998],
+    ["Le Fabuleux Destin d'Amélie Poulain",7,2001,"amelie poulain","amelie"],["Astérix et Obélix : Mission Cléopâtre",8,2002,"mission cleopatre"],["Les Choristes",3,2004,"choristes"],
+    ["OSS 117",4,2006,"oss"],["Bienvenue chez les Ch'tis",6,2008,"chtis","ch tis"],["Intouchables",10,2011],["Qu'est-ce qu'on a fait au Bon Dieu ?",2,2014,"bon dieu"]]},
+
+  { theme:"Séries", q:"Cite une série HBO", y:"année de lancement", a:[
+    ["Oz",1,1997],["Sex and the City",5,1998],["Les Soprano",8,1999,"soprano","sopranos"],["Six Feet Under",2,2001],["The Wire",4,2002,"sur ecoute","wire"],["Rome",1,2005],
+    ["True Blood",2,2008],["Game of Thrones",30,2011,"got","trone de fer"],["True Detective",4,2014],["Silicon Valley",1,2014],["Westworld",3,2016],["Big Little Lies",2,2017],
+    ["Succession",4,2018],["Chernobyl",5,2019],["Euphoria",6,2019],["The White Lotus",3,2021,"white lotus"],["House of the Dragon",5,2022,"house of the dragon"],["The Last of Us",8,2023,"last of us"]]},
+  { theme:"Séries", q:"Cite une série française", y:"année de lancement", a:[
+    ["Les Brigades du Tigre",1,1974,"brigades du tigre"],["Navarro",4,1989],["Julie Lescaut",3,1992],["Un gars, une fille",5,1999,"un gars une fille"],["Caméra Café",6,2001,"camera cafe"],
+    ["Plus belle la vie",9,2004,"pbla"],["Kaamelott",14,2005],["Engrenages",2,2005],["Fais pas ci, fais pas ça",4,2007,"fais pas ci"],["Un village français",3,2009,"village francais"],
+    ["Scènes de ménages",5,2009,"scenes de menages"],["Platane",1,2011],["Les Revenants",2,2012,"revenants"],["Le Bureau des légendes",7,2015,"bureau des legendes"],
+    ["Dix pour cent",4,2015,"10 pour cent"],["Hippocrate",2,2018],["Validé",2,2020,"valide"],["Lupin",7,2021],["HPI",6,2021,"haut potentiel intellectuel"]]},
+  { theme:"Séries", q:"Cite une série d'animation", y:"année de lancement", a:[
+    ["Les Pierrafeu",2,1960,"pierrafeu"],["Scooby-Doo",5,1969,"scooby"],["Dragon Ball Z",8,1989,"dbz"],["Les Simpson",20,1989,"simpson","simpsons"],["Les Razmoket",2,1991,"razmoket"],
+    ["South Park",8,1997],["Pokémon",6,1997,"pokemon"],["Futurama",4,1999],["Les Griffin",6,1999,"griffin","family guy"],["Bob l'éponge",9,1999,"bob l eponge","bob leponge"],
+    ["Totally Spies",3,2001],["Code Lyoko",2,2003],["Avatar, le dernier maître de l'air",4,2005,"avatar","dernier maitre de l air"],["Adventure Time",2,2010],
+    ["Rick et Morty",6,2013,"rick and morty","rick et morty"],["BoJack Horseman",2,2014,"bojack"],["Miraculous",3,2015,"ladybug"],["Arcane",5,2021]]},
+  { theme:"Séries", q:"Cite une série médicale", y:"année de lancement", a:[
+    ["Docteur Quinn",3,1993,"dr quinn"],["Urgences",14,1994,"er"],["Scrubs",8,2001],["Nip/Tuck",2,2003,"nip tuck"],["Dr House",28,2004,"house"],["Grey's Anatomy",30,2005,"greys anatomy","grey"],
+    ["Chicago Med",2,2015],["The Good Doctor",6,2017,"good doctor"],["Hippocrate",2,2018],["New Amsterdam",3,2018],["The Pitt",2,2025,"pitt"]]},
+
+  { theme:"Sport", q:"Cite un vainqueur du Tour de France", y:"première victoire", a:[
+    ["Maurice Garin",1,1903,"garin"],["Fausto Coppi",3,1949,"coppi"],["Louison Bobet",2,1953,"bobet"],["Jacques Anquetil",7,1957,"anquetil"],["Eddy Merckx",12,1969,"merckx"],
+    ["Bernard Thévenet",1,1975,"thevenet"],["Bernard Hinault",14,1978,"hinault"],["Laurent Fignon",4,1983,"fignon"],["Greg LeMond",2,1986,"lemond"],["Miguel Indurain",6,1991,"indurain"],
+    ["Marco Pantani",3,1998,"pantani"],["Alberto Contador",4,2007,"contador"],["Bradley Wiggins",2,2012,"wiggins"],["Chris Froome",6,2013,"froome"],["Vincenzo Nibali",1,2014,"nibali"],
+    ["Egan Bernal",1,2019,"bernal"],["Tadej Pogačar",10,2020,"pogacar"],["Jonas Vingegaard",5,2022,"vingegaard"]]},
+  { theme:"Sport", q:"Cite un(e) vainqueur de Roland-Garros en simple", y:"premier titre", a:[
+    ["Björn Borg",5,1974,"borg"],["Chris Evert",1,1974,"evert"],["Mats Wilander",1,1982,"wilander"],["Martina Navratilova",1,1982,"navratilova"],["Yannick Noah",12,1983,"noah"],
+    ["Ivan Lendl",1,1984,"lendl"],["Steffi Graf",3,1987,"graf"],["Michael Chang",1,1989,"chang"],["Monica Seles",1,1990,"seles"],["Gustavo Kuerten",2,1997,"kuerten","guga"],
+    ["Andre Agassi",2,1999,"agassi"],["Mary Pierce",2,2000,"pierce"],["Serena Williams",3,2002,"serena"],["Justine Henin",2,2003,"henin"],["Rafael Nadal",35,2005,"nadal","rafa"],
+    ["Roger Federer",8,2009,"federer"],["Stan Wawrinka",2,2015,"wawrinka"],["Novak Djokovic",8,2016,"djokovic"],["Iga Świątek",3,2020,"swiatek"],["Carlos Alcaraz",5,2024,"alcaraz"],["Coco Gauff",1,2025,"gauff"]]},
+  { theme:"Sport", q:"Cite un club vainqueur de la Ligue des champions", y:"premier titre", a:[
+    ["Real Madrid",24,1956,"real"],["Benfica",1,1961],["AC Milan",6,1963,"ac milan","milan ac","milan"],["Inter Milan",4,1964,"inter","inter milan"],["Celtic",1,1967],
+    ["Manchester United",6,1968,"man utd","manchester united"],["Ajax",3,1971,"ajax amsterdam"],["Bayern Munich",8,1974,"bayern"],["Liverpool",7,1977],["Nottingham Forest",0.5,1979,"nottingham"],
+    ["Aston Villa",0.5,1982],["Hambourg",0.5,1983,"hambourg sv","hamburg"],["Juventus",4,1985,"juve"],["Steaua Bucarest",0.5,1986,"steaua"],["FC Porto",1,1987,"porto"],["PSV Eindhoven",0.5,1988,"psv"],
+    ["Étoile rouge de Belgrade",0.5,1991,"etoile rouge"],["FC Barcelone",9,1992,"barcelone","barca"],["Olympique de Marseille",8,1993,"marseille","om"],["Borussia Dortmund",1,1997,"dortmund"],
+    ["Chelsea",2,2012],["Manchester City",3,2023,"man city","manchester city"],["Paris Saint-Germain",8,2025,"psg","paris saint germain","paris sg"]]},
+  { theme:"Sport", q:"Cite un sport olympique d'été", y:"année d'entrée aux JO", a:[
+    ["Athlétisme",14,1896,"athletisme"],["Natation",14,1896],["Gymnastique",6,1896],["Escrime",3,1896],["Cyclisme",5,1896,"velo"],["Lutte",2,1896],["Haltérophilie",2,1896,"halterophilie"],
+    ["Tennis",4,1896],["Tir",1,1896],["Aviron",2,1900],["Football",8,1900,"foot"],["Équitation",2,1900,"equitation"],["Voile",1,1900],["Tir à l'arc",2,1900,"tir a l arc"],["Golf",1,1900],
+    ["Boxe",3,1904],["Basket",5,1936,"basketball","basket ball"],["Handball",4,1936,"hand"],["Canoë-kayak",1,1936,"canoe","kayak"],["Volley",3,1964,"volleyball","volley ball"],["Judo",6,1964],
+    ["Tennis de table",1,1988,"ping pong"],["Badminton",1,1992],["Taekwondo",1,2000],["Triathlon",1,2000],["Rugby à 7",1,2016,"rugby"],["Surf",1,2020],["Skateboard",1,2020,"skate"],
+    ["Escalade",1,2020],["Breakdance",1,2024,"breaking"]]},
+  { theme:"Sport", q:"Cite une légende de la NBA", y:"année de draft", a:[
+    ["Bill Russell",1,1956,"russell"],["Wilt Chamberlain",2,1959,"chamberlain"],["Kareem Abdul-Jabbar",3,1969,"kareem","abdul jabbar"],["Larry Bird",3,1978,"bird"],
+    ["Magic Johnson",6,1979,"magic"],["Michael Jordan",28,1984,"jordan"],["Shaquille O'Neal",7,1992,"shaq","o neal"],["Kobe Bryant",16,1996,"kobe","bryant"],["Tim Duncan",2,1997,"duncan"],
+    ["Dirk Nowitzki",1,1998,"nowitzki"],["Tony Parker",5,2001,"parker"],["LeBron James",14,2003,"lebron"],["Kevin Durant",2,2007,"durant"],["Stephen Curry",8,2009,"curry"],
+    ["Giannis Antetokounmpo",1,2013,"giannis"],["Nikola Jokić",1,2014,"jokic"],["Luka Dončić",1,2018,"doncic","luka"],["Victor Wembanyama",4,2023,"wembanyama","wemby"]]},
+
+  { theme:"Musique", q:"Cite un groupe de rock", y:"année de formation", a:[
+    ["The Beatles",16,1960,"beatles"],["The Rolling Stones",10,1962,"rolling stones","stones"],["The Who",2,1964],["Pink Floyd",6,1965],["Led Zeppelin",5,1968],["Queen",14,1970],
+    ["AC/DC",9,1973,"ac dc","acdc"],["Kiss",2,1973],["Téléphone",2,1976,"telephone"],["U2",4,1976],["The Clash",1,1976,"clash"],["The Cure",2,1978,"cure"],["Noir Désir",2,1980,"noir desir"],
+    ["Indochine",4,1981],["Metallica",5,1981],["Red Hot Chili Peppers",2,1983,"red hot","rhcp"],["Guns N' Roses",4,1985,"guns n roses","guns and roses","gnr"],["Radiohead",2,1985],
+    ["Nirvana",7,1987],["Oasis",2,1991],["Muse",2,1994],["Coldplay",4,1996],["Arctic Monkeys",2,2002],["Måneskin",1,2016,"maneskin"]]},
+  { theme:"Musique", q:"Cite un(e) chanteur ou chanteuse français(e)", y:"année de naissance", a:[
+    ["Édith Piaf",8,1915,"piaf"],["Georges Brassens",3,1921,"brassens"],["Charles Aznavour",7,1924,"aznavour"],["Serge Gainsbourg",4,1928,"gainsbourg"],["Dalida",4,1933],
+    ["Claude François",4,1939,"cloclo","claude francois"],["Johnny Hallyday",14,1943,"johnny","hallyday"],["Michel Sardou",4,1947,"sardou"],["France Gall",2,1947],
+    ["Jean-Jacques Goldman",7,1951,"goldman"],["Renaud",3,1952],["Francis Cabrel",3,1953,"cabrel"],["Mylène Farmer",5,1961,"mylene farmer"],["Vanessa Paradis",2,1972,"paradis"],
+    ["Booba",3,1976],["Zaz",2,1980],["Orelsan",3,1982],["Indila",1,1984],["Matt Pokora",2,1985,"pokora","m pokora"],["Christine and the Queens",1,1988,"christine"],
+    ["Jul",4,1990],["Aya Nakamura",6,1995,"aya"],["Louane",2,1996]]},
+  { theme:"Musique", q:"Cite un rappeur ou une rappeuse américain(e)", y:"année de naissance", a:[
+    ["Dr. Dre",5,1965,"dr dre","dre"],["Jay-Z",8,1969,"jay z","jayz"],["Ice Cube",2,1969],["Tupac",10,1971,"2pac"],["Snoop Dogg",8,1971,"snoop"],["Notorious B.I.G.",6,1972,"biggie","notorious big","notorious"],
+    ["Eminem",20,1972],["Nas",2,1973],["50 Cent",6,1975,"50cent","fifty cent"],["Kanye West",8,1977,"kanye","ye"],["Lil Wayne",3,1982],["Nicki Minaj",4,1982,"minaj"],
+    ["J. Cole",2,1985,"j cole"],["Drake",7,1986],["Kendrick Lamar",6,1987,"kendrick"],["Travis Scott",4,1991,"travis"],["Tyler, the Creator",1,1991,"tyler the creator"],
+    ["Cardi B",2,1992,"cardi"],["Post Malone",2,1995],["Lil Nas X",1,1999]]},
+  { theme:"Musique", q:"Cite un pays vainqueur de l'Eurovision", y:"première victoire", a:[
+    ["Suisse",4,1956],["Pays-Bas",3,1957],["France",14,1958],["Luxembourg",3,1961],["Italie",8,1964],["Autriche",3,1966],["Royaume-Uni",6,1967,"angleterre","uk"],["Espagne",3,1968],
+    ["Irlande",5,1970],["Monaco",1,1971],["Suède",12,1974,"suede"],["Israël",3,1978,"israel"],["Allemagne",4,1982],["Norvège",3,1985,"norvege"],["Belgique",3,1986],
+    ["Danemark",2,2000],["Estonie",1,2001],["Lettonie",1,2002],["Turquie",1,2003],["Ukraine",5,2004],["Grèce",2,2005,"grece"],["Finlande",3,2006],["Serbie",1,2007],
+    ["Russie",2,2008],["Azerbaïdjan",1,2011,"azerbaidjan"],["Portugal",3,2017]]},
+
+  { theme:"Borat", q:"Cite un film avec Sacha Baron Cohen", y:"année de sortie", a:[
+    ["Ali G",6,2002,"ali g indahouse"],["Madagascar",6,2005],["Borat",40,2006],["Ricky Bobby : roi du circuit",1,2006,"ricky bobby","talladega"],["Sweeney Todd",3,2007],
+    ["Brüno",8,2009,"bruno"],["Hugo Cabret",2,2011,"hugo"],["The Dictator",14,2012,"dictator","le dictateur"],["Les Misérables",3,2012,"miserables"],["Grimsby",3,2016,"agent trop special"],
+    ["Alice de l'autre côté du miroir",1,2016,"alice"],["Borat 2",10,2020,"borat 2","nouvelle mission","subsequent moviefilm"],["Les Sept de Chicago",2,2020,"sept de chicago","chicago 7"]]},
+  { theme:"Borat", q:"Cite un personnage joué par Sacha Baron Cohen", y:"première apparition", a:[
+    ["Ali G",18,1998],["Borat",45,2000,"borat sagdiyev"],["Brüno",9,2000,"bruno"],["Roi Julian",8,2005,"julian","king julien","roi julien"],["Jean Girard",1,2006],
+    ["Adolfo Pirelli",1,2007,"pirelli"],["Inspecteur Gustave",1,2011,"gustave"],["Amiral Général Aladeen",9,2012,"aladeen"],["Thénardier",3,2012,"thenardier"],
+    ["Nobby",1,2016,"nobby butcher"],["Erran Morad",1,2018,"morad"],["Eli Cohen",1,2019,"the spy"],["Abbie Hoffman",1,2020,"hoffman"]]},
 ];
 
 const MODES = [
@@ -163,7 +366,7 @@ const min = (q,i) => Math.min(...q.a.map(a=>a[i]));
 const span = (a,q) => (a[2]-min(q,2)) / ((max(q,2)-min(q,2)) || 1);
 const points = (a,q,m) => Math.round(m.pts(a,q)*100);
 
-const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/&/g," et ").replace(/[^a-z0-9]+/g," ").trim();
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/&/g," et ").replace(/\+/g," plus ").replace(/#/g," sharp ").replace(/[^a-z0-9]+/g," ").trim();
 // Réponse reconnue si un alias apparaît comme mot(s) entier(s) ; le plus long alias gagne (« toy story 2 » bat « toy story »).
 function match(input, q) {
   const n = " " + norm(input) + " ";
@@ -176,18 +379,28 @@ function match(input, q) {
 }
 
 const $ = id => document.getElementById(id);
-const ROUNDS = 5, TIME = 20;
-let mode = MODES[1], theme = "Tous", deck, round, total, timer, left;
+const ROUNDS = 7, DAY = new Date().toLocaleDateString("fr-CA"); // AAAA-MM-JJ local
+let mode = MODES[1], theme = "Du jour", deck, round, total, timer, left, TIME;
+// Mélange déterministe : même date + même mode = mêmes questions pour tout le monde.
+function seeded(str) { let h = 1779033703; for (const c of str) h = Math.imul(h ^ c.charCodeAt(0), 3432918353); return () => ((h = Math.imul(h ^ h >>> 15, 2246822507) ^ Math.imul(h ^ h >>> 13, 3266489909)) >>> 0) / 4294967296; }
+const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k,v) => { try { localStorage.setItem(k,v); } catch {} } };
 
 // Menu
 for (const m of MODES) {
   const b = document.createElement("button");
-  b.className = "mode"; b.innerHTML = `<b>${m.name}</b><small>${m.goal}</small>`;
+  b.className = "mode";
   b.setAttribute("aria-pressed", m === mode);
   b.onclick = () => { mode = m; [...$("modes").children].forEach(c => c.setAttribute("aria-pressed", c === b)); };
   $("modes").append(b);
 }
-for (const t of ["Tous", ...new Set(QUESTIONS.map(q=>q.theme))]) {
+function paintModes() {
+  MODES.forEach((m, i) => {
+    const done = store.get(`jour-${DAY}-${m.id}`);
+    $("modes").children[i].innerHTML = `<b>${m.name}</b><small>${m.goal}</small>` + (done !== null ? `<small class="done">Partie du jour : ${done}/700</small>` : "");
+  });
+}
+paintModes();
+for (const t of ["Du jour", "Tous", ...new Set(QUESTIONS.map(q=>q.theme))]) {
   const b = document.createElement("button");
   b.textContent = t; b.setAttribute("aria-pressed", t === theme);
   b.onclick = () => { theme = t; [...$("themes").children].forEach(c => c.setAttribute("aria-pressed", c === b)); };
@@ -197,7 +410,10 @@ for (const t of ["Tous", ...new Set(QUESTIONS.map(q=>q.theme))]) {
 function show(id) { for (const s of ["menu","game","end"]) $(s).hidden = s !== id; }
 
 function start() {
-  deck = QUESTIONS.filter(q => theme === "Tous" || q.theme === theme).sort(() => Math.random() - .5).slice(0, ROUNDS);
+  const rnd = theme === "Du jour" ? seeded(DAY + mode.id) : Math.random;
+  deck = QUESTIONS.filter(q => theme === "Du jour" || theme === "Tous" || q.theme === theme)
+    .map(q => [rnd(), q]).sort((a,b) => a[0] - b[0]).map(x => x[1]).slice(0, ROUNDS);
+  TIME = mode.id === "moins" ? 40 : 30;
   round = 0; total = 0; show("game"); ask();
 }
 
@@ -205,25 +421,35 @@ function ask() {
   const q = deck[round];
   $("round").textContent = `Manche ${round+1}/${deck.length} · ${q.theme}`;
   $("score").textContent = `${total} pts`;
-  $("goal").textContent = mode.goal;
+  $("goal").textContent = mode.goal + (mode.id === "recent" || mode.id === "ancien" ? ` Critère : ${q.y}.` : "");
   $("question").textContent = q.q;
   $("ask").hidden = false; $("reveal").hidden = true;
-  $("answer").value = ""; $("answer").focus();
-  left = TIME; tick();
+  $("answer").value = ""; $("wrong").hidden = true;
+  left = TIME; tick(); run();
+}
+function run() {
+  $("answer").disabled = false; $("answer").focus();
   timer = setInterval(() => { left -= .25; tick(); if (left <= 0) answer(""); }, 250);
 }
 function tick() { $("timer").style.width = (left / TIME * 100) + "%"; }
 
 function answer(text) {
-  clearInterval(timer);
-  const q = deck[round], hit = text.trim() && match(text, q), p = hit ? points(hit, q, mode) : 0;
+  clearInterval(timer); // chrono en pause pendant la vérification
+  const q = deck[round], hit = text.trim() && match(text, q);
+  if (text.trim() && !hit) {
+    $("wrong").textContent = `« ${text.trim()} » : mauvaise réponse, retente !`;
+    $("wrong").hidden = false;
+    $("answer").value = ""; $("answer").disabled = true;
+    return setTimeout(run, 1000); // 1 s pour lire le message, puis le chrono repart
+  }
+  const p = hit ? points(hit, q, mode) : 0;
   total += p;
   $("score").textContent = `${total} pts`;
   $("verdict").className = "verdict " + (hit ? "ok" : "ko");
-  $("verdict").textContent = hit ? `${hit[0]} : +${p} pts` : text.trim() ? `« ${text.trim()} » ne fait pas partie des réponses : 0 pt` : "Temps écoulé : 0 pt";
+  $("verdict").textContent = hit ? `${hit[0]} : +${p} pts` : "Temps écoulé : 0 pt";
   const sorted = [...q.a].sort((x,y) => points(y,q,mode) - points(x,q,mode));
   $("best").textContent = `Meilleure réponse : ${sorted[0][0]}`;
-  $("list").innerHTML = sorted.map(a => `<li class="${a===hit?"me":""}"><span>${a[0]}</span><span class="meta">${a[1]} % · ${a[2]}</span><span class="pts"><i style="width:${points(a,q,mode)}%"></i></span></li>`).join("");
+  $("list").innerHTML = sorted.map(a => `<li class="${a===hit?"me":""}"><span>${a[0]}</span><span class="meta">${a[1]} % · ${a[2] < 0 ? -a[2] + " av. J.-C." : a[2]}</span><span class="pts"><i style="width:${points(a,q,mode)}%"></i></span></li>`).join("");
   $("ask").hidden = true; $("reveal").hidden = false;
   $("next").textContent = round + 1 < deck.length ? "Suivant" : "Voir le score";
   $("next").focus();
@@ -236,6 +462,7 @@ $("next").onclick = () => {
   if (++round < deck.length) return ask();
   $("final").textContent = `${total} pts`;
   $("recap").textContent = `Mode « ${mode.name} » · thème ${theme} · sur ${deck.length * 100} possibles`;
+  if (theme === "Du jour") { store.set(`jour-${DAY}-${mode.id}`, total); paintModes(); }
   show("end");
 };
 
@@ -246,6 +473,9 @@ console.assert(match("Toy Story 2", pix)[0] === "Toy Story 2");
 console.assert(match("Toy story", pix)[0] === "Toy Story");
 console.assert(match("monstres & cie", pix)[0] === "Monstres & Cie");
 console.assert(match("oscars", pix) === null);
+// Chaque réponse doit être reconnue par son propre nom, et les données bien formées.
+for (const q of QUESTIONS) for (const a of q.a) console.assert(match(a[0], q) === a && typeof a[1] === "number" && Number.isInteger(a[2]), q.q, a[0]);
+{ const r1 = seeded("x"), r2 = seeded("x"), v = r1(); console.assert(v === r2() && v >= 0 && v < 1); }
 console.assert(points(nolan.a.find(a=>a[0]==="Oppenheimer"), nolan, MODES[2]) === 100);
 </script>
 </body>
