@@ -4,110 +4,232 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kisékiéplus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#14111f; --card:#211c33; --line:#3a3354; --txt:#f3effc; --mut:#a49cbf; --acc:#ffcc33; --ok:#3ddc97; --ko:#ff5c7a; }
+  :root { --bg:#100f0e; --card:#1a1918; --card2:#211f1c; --line:#2d2a26; --txt:#f3ede0; --mut:#8c867b; --acc:#f5a623; --org:#ff7a2f; --ok:#5fd39a; --ko:#ff6b5b;
+    --cond:"Barlow Condensed", Impact, sans-serif; --mono:"DM Mono", ui-monospace, monospace; --sans:"DM Sans", system-ui, sans-serif; }
   * { box-sizing:border-box; }
-  body { margin:0; min-height:100vh; background:var(--bg); color:var(--txt); font:16px/1.5 system-ui, sans-serif; display:flex; justify-content:center; }
-  main { width:100%; max-width:720px; padding:24px 16px 48px; }
-  h1 { font-size:clamp(2rem,8vw,3.2rem); margin:.2em 0 0; letter-spacing:-.03em; }
-  h1 span { color:var(--acc); }
-  h2 { font-size:1rem; text-transform:uppercase; letter-spacing:.08em; color:var(--mut); margin:28px 0 10px; }
-  .sub { color:var(--mut); margin:0 0 8px; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
-  button { font:inherit; color:inherit; cursor:pointer; border:2px solid var(--line); background:var(--card); border-radius:14px; padding:14px; text-align:left; }
-  button:hover { border-color:var(--mut); }
-  button:focus-visible, input:focus-visible { outline:3px solid var(--acc); outline-offset:2px; }
-  button[aria-pressed="true"] { border-color:var(--acc); background:#2d2640; }
-  .mode b { display:block; font-size:1.1rem; }
-  .mode small { color:var(--mut); }
-  .mode .done { display:block; margin-top:6px; color:var(--ok); font-weight:700; }
-  .chips { display:flex; flex-wrap:wrap; gap:8px; }
-  .chips button { padding:8px 14px; border-radius:999px; }
-  .go { display:block; width:100%; margin-top:28px; background:var(--acc); color:#14111f; border-color:var(--acc); font-weight:800; font-size:1.2rem; text-align:center; }
-  .go:hover { filter:brightness(1.08); border-color:var(--acc); }
-  .top { display:flex; justify-content:space-between; color:var(--mut); font-size:.9rem; }
-  .q { font-size:clamp(1.4rem,5vw,2rem); font-weight:800; margin:18px 0 6px; }
-  .bar { height:10px; background:var(--card); border-radius:99px; overflow:hidden; margin:14px 0; }
-  .bar i { display:block; height:100%; background:var(--acc); transition:width .25s linear; }
-  form { display:flex; gap:8px; }
-  input { flex:1; min-width:0; font:inherit; font-size:1.1rem; padding:14px; border-radius:14px; border:2px solid var(--line); background:var(--card); color:var(--txt); }
-  form button { background:var(--acc); color:#14111f; border-color:var(--acc); font-weight:700; }
-  .verdict { font-size:1.3rem; font-weight:800; margin:16px 0 4px; }
-  .verdict.ok { color:var(--ok); } .verdict.ko { color:var(--ko); }
-  ol { list-style:none; padding:0; margin:12px 0; }
-  li { display:grid; grid-template-columns:1fr auto; gap:2px 10px; padding:8px 12px; border-radius:10px; background:var(--card); margin-bottom:6px; border:2px solid transparent; }
-  li.me { border-color:var(--acc); }
-  li .meta { color:var(--mut); font-size:.85rem; text-align:right; }
-  li .pts { grid-column:1/-1; height:4px; background:var(--line); border-radius:9px; overflow:hidden; }
-  li .pts i { display:block; height:100%; background:var(--ok); }
-  .big { font-size:4rem; font-weight:900; color:var(--acc); margin:10px 0; }
-  .steps { display:flex; gap:6px; justify-content:center; margin:14px 0 4px; }
-  .steps span { width:30px; height:30px; border-radius:8px; background:var(--card); border:2px solid var(--line); display:grid; place-items:center; font-weight:900; color:#14111f; }
-  .steps .cur { border-color:var(--acc); }
-  .rank { text-align:center; color:var(--mut); font-size:.85rem; letter-spacing:.08em; text-transform:uppercase; }
-  .rank b { color:var(--acc); }
-  .card { border:2px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card); margin-top:18px; }
-  .banner { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; color:#14111f; font-weight:900; font-size:1.5rem; text-transform:uppercase; }
-  .banner small { font-size:.9rem; }
-  .card .body { padding:14px 16px; }
-  .card h3 { font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; color:var(--mut); margin:14px 0 6px; font-weight:600; }
-  .card li { background:transparent; padding:4px 0; grid-template-columns:1fr 120px 70px; align-items:center; border:0; }
-  .card li em { color:var(--acc); font-style:normal; }
-  .card li .pts { grid-column:auto; height:8px; }
-  .card li .pts i { background:var(--mut); }
-  .card li.me .pts i { background:var(--acc); }
-  @media (max-width:480px) { .card li { grid-template-columns:1fr 60px 64px; } }
+  html { background:var(--bg); }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--txt); font:15px/1.5 var(--sans);
+    background-image:repeating-linear-gradient(90deg, transparent 0 95px, rgba(255,255,255,.018) 95px 96px); }
+  button { font:inherit; color:inherit; cursor:pointer; background:none; border:0; padding:0; }
+  button:focus-visible, input:focus-visible { outline:2px solid var(--acc); outline-offset:3px; }
+  .mono { font-family:var(--mono); }
   [hidden] { display:none !important; }
+
+  /* En-tête */
+  header { max-width:1160px; margin:0 auto; padding:26px 20px; display:flex; justify-content:space-between; align-items:center; }
+  .brand { display:flex; gap:12px; align-items:center; }
+  .logo { width:36px; height:36px; border-radius:5px; background:var(--acc); color:#14110c; display:grid; place-items:center; font:800 26px/1 var(--cond); position:relative; }
+  .logo::after, .flap::after { content:""; position:absolute; left:0; right:0; top:50%; height:2px; background:rgba(0,0,0,.45); }
+  .brand b { display:block; font:700 24px/1 var(--cond); }
+  .brand small { font:400 10px var(--mono); letter-spacing:.18em; color:var(--mut); text-transform:uppercase; }
+  .live { font:400 10px var(--mono); letter-spacing:.14em; color:var(--mut); text-transform:uppercase; }
+  .live::before { content:"●"; color:var(--ok); margin-right:8px; }
+  main { max-width:1000px; margin:0 auto; padding:0 20px 60px; }
+
+  /* Accueil */
+  .eyebrow { text-align:center; font:400 11px var(--mono); letter-spacing:.2em; color:var(--acc); text-transform:uppercase; margin:36px 0 22px; }
+  .eyebrow::before, .eyebrow::after { content:""; display:inline-block; width:28px; height:1px; background:currentColor; vertical-align:middle; margin:0 14px; }
+  .flaps { display:flex; justify-content:center; gap:clamp(2px,.6vw,6px); }
+  .flap { position:relative; flex:0 1 70px; aspect-ratio:7/10.5; display:grid; place-items:center; background:linear-gradient(#1e1c1a 50%, #191715 50%); border:1px solid var(--line); border-radius:4px;
+    font:800 clamp(22px,7.5vw,72px)/1 var(--cond); color:var(--acc); box-shadow:0 8px 20px rgba(0,0,0,.4); animation:flip .5s both; }
+  .flap.w { color:var(--txt); }
+  @keyframes flip { from { transform:rotateX(90deg); opacity:0; } }
+  .tag { text-align:center; color:var(--mut); font-size:16px; margin:26px 0 0; line-height:1.8; }
+  .tag b { color:var(--txt); font-weight:500; }
+  .facts { display:flex; flex-wrap:wrap; justify-content:center; gap:10px 26px; margin:18px 0 0; font:400 11px var(--mono); color:var(--mut); }
+  .facts span::first-letter { color:var(--acc); }
+  .facts i { color:var(--acc); font-style:normal; margin-right:6px; }
+  .sec { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin:44px 0 14px; font:400 11px var(--mono); letter-spacing:.14em; text-transform:uppercase; }
+  .sec em { color:var(--acc); font-style:normal; margin-right:10px; }
+  .sec small { letter-spacing:0; text-transform:none; color:var(--mut); }
+  .modes { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .mode { text-align:left; background:var(--card); border:1px solid var(--line); border-radius:6px; padding:18px 18px 22px; position:relative; transition:border-color .2s, background .2s; }
+  .mode:hover { border-color:#4a4540; }
+  .mode[aria-pressed="true"] { border-color:var(--acc); background:#221d15; }
+  .mode .n { font:400 10px var(--mono); color:var(--mut); }
+  .mode .radio { position:absolute; top:16px; right:16px; width:16px; height:16px; border-radius:50%; border:1px solid #4a4540; display:grid; place-items:center; font-size:10px; color:#14110c; }
+  .mode[aria-pressed="true"] .radio { background:var(--acc); border-color:var(--acc); }
+  .mode[aria-pressed="true"] .radio::after { content:"✓"; font-weight:700; }
+  .mode svg { display:block; width:100%; height:96px; margin:6px 0 14px; }
+  .mode .k { font:400 9px var(--mono); letter-spacing:.14em; color:var(--mut); text-transform:uppercase; }
+  .mode .title { font:700 30px/1.05 var(--cond); margin:4px 0 6px; }
+  .mode p { margin:0; color:var(--mut); font-size:12px; }
+  .mode .done { margin-top:8px; font:500 11px var(--mono); color:var(--acc); }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { padding:8px 13px; border:1px solid var(--line); border-radius:4px; background:var(--card); font-size:12px; color:#cfc8ba; }
+  .chip:hover { border-color:#4a4540; }
+  .chip[aria-pressed="true"] { background:var(--acc); border-color:var(--acc); color:#14110c; font-weight:600; }
+  .cta { display:inline-flex; align-items:center; justify-content:center; gap:16px; min-width:250px; padding:13px 30px; background:var(--acc); color:#14110c; border-radius:3px;
+    font:700 24px/1 var(--cond); text-transform:uppercase; letter-spacing:.02em; box-shadow:0 4px 0 #a86a0c; transition:transform .1s, box-shadow .1s; }
+  .cta:hover { filter:brightness(1.06); }
+  .cta:active { transform:translateY(3px); box-shadow:0 1px 0 #a86a0c; }
+  .center { text-align:center; margin-top:30px; }
+  .hint { font:400 10px var(--mono); color:var(--mut); margin-top:16px; }
+  footer.foot { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:40px; padding-top:20px; border-top:1px solid var(--line); font:400 10px var(--mono); color:var(--mut); text-transform:uppercase; letter-spacing:.06em; }
+  footer.foot b { color:var(--acc); font-weight:400; }
+
+  /* Jeu */
+  .hud { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; padding:14px 0 24px; border-bottom:1px solid var(--line); }
+  .steps { display:flex; gap:7px; flex-wrap:wrap; }
+  .steps span { position:relative; width:43px; height:46px; display:grid; place-items:center; background:var(--card); border:1px solid var(--line); border-radius:3px; font:400 16px var(--mono); color:#6c665d; }
+  .steps span::after { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:rgba(0,0,0,.5); }
+  .steps .cur { border-color:var(--acc); color:var(--acc); }
+  .steps .t { font-size:18px; }
+  .score { text-align:right; }
+  .score b { font:500 28px var(--mono); color:var(--acc); }
+  .score span { font:500 12px var(--mono); color:var(--mut); margin-left:10px; }
+  .score small { display:block; font:400 10px var(--mono); color:var(--mut); }
+  .crumb { text-align:center; font:400 10px var(--mono); letter-spacing:.14em; color:var(--acc); text-transform:uppercase; margin:52px 0 20px; }
+  .crumb i { color:var(--line); font-style:normal; margin:0 12px; }
+  .q { text-align:center; font:700 clamp(36px,7vw,64px)/1.02 var(--cond); margin:0 0 16px; text-wrap:balance; }
+  .goal { text-align:center; color:var(--mut); margin:0; }
+  .crit { text-align:center; font:400 11px var(--mono); color:var(--acc); margin:8px 0 0; }
+  .ask { max-width:700px; margin:36px auto 0; }
+  .tlabel { display:flex; justify-content:space-between; font:400 11px var(--mono); letter-spacing:.06em; color:var(--mut); text-transform:uppercase; }
+  .tlabel b { color:var(--acc); font-weight:500; }
+  .bar { height:6px; background:var(--card); border-radius:2px; overflow:hidden; margin:8px 0 18px; }
+  .bar i { display:block; height:100%; background:var(--acc); transition:width .25s linear; }
+  .urgent .tlabel b { color:var(--org); }
+  .urgent .bar i { background:var(--org); animation:pulse .5s infinite alternate; }
+  @keyframes pulse { to { opacity:.5; } }
+  form { display:flex; gap:10px; padding:7px; background:var(--card); border:1px solid var(--acc); border-radius:4px; }
+  form input { flex:1; min-width:0; background:none; border:0; color:var(--txt); font:400 18px var(--sans); padding:8px 8px; }
+  form input::placeholder { color:var(--mut); }
+  form input:focus-visible { outline:none; }
+  form button { width:54px; background:var(--acc); color:#14110c; border-radius:3px; font-size:20px; }
+  form button:disabled { opacity:.5; }
+  .shake { animation:shake .35s; }
+  @keyframes shake { 25% { transform:translateX(-8px); } 50% { transform:translateX(6px); } 75% { transform:translateX(-4px); } }
+  .wrong { color:var(--ko); font:500 12px var(--mono); margin:10px 0 0; text-align:center; }
+
+  .card { max-width:700px; margin:30px auto 0; background:var(--card); border:1px solid var(--line); border-radius:4px; overflow:hidden; position:relative; }
+  .banner { display:flex; justify-content:space-between; align-items:center; padding:14px 24px; color:#14110c; }
+  .banner b { font:700 30px/1 var(--cond); }
+  .banner span { font:500 24px var(--mono); }
+  .banner small { font-size:.8em; }
+  .body { padding:22px 28px 28px; }
+  .you { font:700 26px/1.1 var(--cond); }
+  .rank { font-size:12px; color:var(--mut); margin:6px 0 0; }
+  .card h3 { font:400 10px var(--mono); letter-spacing:.14em; color:var(--mut); text-transform:uppercase; margin:26px 0 8px; font-weight:400; }
+  .card ol { list-style:none; margin:0; padding:0; }
+  .card ol.all { max-height:420px; overflow:auto; padding-right:6px; }
+  .card li { display:grid; grid-template-columns:1fr auto; gap:6px; padding:8px 0; font-size:13px; }
+  .card li em { color:var(--acc); font-style:normal; font-size:11px; margin-left:6px; }
+  .card li .v { font:400 11px var(--mono); color:var(--mut); }
+  .card li .b { grid-column:1/-1; height:3px; background:#262420; }
+  .card li .b i { display:block; height:100%; background:#8c867b; width:0; transition:width .6s ease-out; }
+  .card li.me .b i { background:var(--acc); }
+  .more { display:block; margin:14px auto 0; font:400 11px var(--mono); color:var(--acc); letter-spacing:.06em; text-transform:uppercase; }
+  .more:hover { text-decoration:underline; }
+  .card .cta { font-size:20px; min-width:0; padding:12px 34px; }
+  .confetti { position:absolute; inset:60px 0 auto; height:80px; pointer-events:none; overflow:hidden; }
+  .confetti i { position:absolute; top:-10px; width:6px; height:9px; animation:fall 1.4s ease-in forwards; }
+  @keyframes fall { to { transform:translateY(90px) rotate(240deg); opacity:0; } }
+  .gfoot { max-width:900px; margin:30px auto 0; display:flex; justify-content:space-between; align-items:center; font:400 10px var(--mono); color:var(--mut); text-transform:uppercase; letter-spacing:.06em; }
+  .gfoot button { font:500 11px var(--mono); text-transform:none; letter-spacing:0; color:#cfc8ba; }
+  .gfoot button:hover { color:var(--acc); }
+
+  /* Fin */
+  .final { text-align:center; padding-top:30px; }
+  .final .big { font:800 clamp(64px,14vw,120px)/1 var(--cond); color:var(--acc); margin:10px 0 0; }
+  .final .big small { font:500 20px var(--mono); color:var(--mut); }
+  .final .lvl { font:700 34px var(--cond); margin:6px 0 0; }
+  .final .steps { justify-content:center; margin:24px 0 8px; }
+  .final .row { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:30px; }
+  .ghost { padding:13px 24px; border:1px solid var(--line); border-radius:3px; font:700 20px/1 var(--cond); text-transform:uppercase; }
+  .ghost:hover { border-color:var(--acc); }
+
+  @media (max-width:860px) { .modes { grid-template-columns:repeat(2,1fr); } .live { display:none; } }
+  @media (max-width:520px) {
+    header { padding:18px 16px; } main { padding:0 16px 48px; }
+    .mode { padding:14px; } .mode .title { font-size:26px; } .mode svg { height:72px; }
+    .hud { flex-direction:column-reverse; } .score { text-align:left; }
+    .steps span { width:36px; height:38px; font-size:13px; }
+    .body { padding:18px; } .banner { padding:12px 18px; }
+    .sec { flex-direction:column; gap:4px; }
+  }
+  @media (prefers-reduced-motion:reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
+<header>
+  <div class="brand"><div class="logo" aria-hidden="true">K</div><div><b>Kisékiéplus</b><small>Le jeu de sondage</small></div></div>
+  <span class="live">Votre intuition entre en jeu</span>
+</header>
 <main>
-  <!-- MENU -->
+  <!-- ACCUEIL -->
   <section id="menu">
-    <h1>Kisékié<span>plus</span></h1>
-    <p class="sub">Une question, un chrono, une seule réponse. Choisis bien laquelle.</p>
-    <h2>Mode</h2>
-    <div class="grid" id="modes"></div>
-    <h2>Thème</h2>
+    <p class="eyebrow">7 questions. Un instinct.</p>
+    <h1 class="flaps" aria-label="Kisékiéplus" id="flaps"></h1>
+    <p class="tag">Tout le monde a une réponse. <b>Mais laquelle choisir ?</b><br>Devinez juste. Marquez des points. Suivez votre intuition.</p>
+    <p class="facts"><span><i>▦</i>7 questions</span><span><i>◷</i>30 à 40 s / question</span><span><i>✦</i>700 points à gagner</span></p>
+    <div class="sec"><span><em>01</em>Choisissez votre mode</span><small>À chacun son intuition.</small></div>
+    <div class="modes" id="modes"></div>
+    <div class="sec"><span><em>02</em>Choisissez votre terrain</span><small id="today"></small></div>
     <div class="chips" id="themes"></div>
-    <button class="go" id="start">Jouer (7 questions)</button>
+    <div class="center">
+      <button class="cta" id="start">Jouer <span aria-hidden="true">→</span></button>
+      <p class="hint">Un même défi pour tout le monde. Chaque jour.</p>
+    </div>
+    <footer class="foot"><span>Un peu de culture. <b>Beaucoup d'instinct.</b></span><span id="count"></span></footer>
   </section>
 
   <!-- JEU -->
   <section id="game" hidden>
-    <div class="top"><span id="round"></span><span id="score"></span></div>
-    <div class="steps" id="steps" aria-hidden="true"></div>
-    <p class="rank" id="rank"></p>
-    <p class="sub" id="goal"></p>
-    <div class="q" id="question"></div>
-    <div id="ask">
-      <div class="bar"><i id="timer"></i></div>
-      <form id="form" autocomplete="off">
-        <input id="answer" aria-label="Ta réponse" placeholder="Ta réponse…">
-        <button>Valider</button>
-      </form>
-      <p class="verdict ko" id="wrong" role="alert" hidden></p>
+    <div class="hud">
+      <div class="steps" id="steps" aria-hidden="true"></div>
+      <div class="score"><b id="score">0</b><span>/ 700 pts</span><small id="rankLine"></small></div>
     </div>
-    <div id="reveal" hidden>
-      <div class="card" role="status">
-        <div class="banner" id="banner"><span id="tierName"></span><span id="gain"></span></div>
-        <div class="body">
-          <div id="best"></div>
-          <h3>Exemples d'autres réponses</h3>
-          <ol id="list"></ol>
-        </div>
+    <p class="crumb" id="crumb"></p>
+    <h2 class="q" id="question"></h2>
+    <p class="goal" id="goal"></p>
+    <p class="crit" id="crit"></p>
+
+    <div class="ask" id="ask">
+      <div id="clock">
+        <div class="tlabel"><span>Le temps tourne</span><b id="secs"></b></div>
+        <div class="bar"><i id="timer"></i></div>
       </div>
-      <button class="go" id="next">Suivant</button>
+      <form id="form" autocomplete="off">
+        <input id="answer" aria-label="Votre réponse" placeholder="Votre première intuition…">
+        <button id="send" aria-label="Valider">→</button>
+      </form>
+      <p class="wrong" id="wrong" role="alert" hidden></p>
     </div>
+
+    <div class="card" id="reveal" role="status" hidden>
+      <div class="banner" id="banner"><b id="tierName"></b><span id="gain"></span></div>
+      <div class="confetti" id="confetti"></div>
+      <div class="body">
+        <div class="you" id="you"></div>
+        <p class="rank" id="rankTxt"></p>
+        <h3>Exemples d'autres réponses</h3>
+        <button class="more" id="up"></button>
+        <ol id="list"></ol>
+        <button class="more" id="down"></button>
+        <div class="center"><button class="cta" id="next"></button></div>
+      </div>
+    </div>
+
+    <div class="gfoot"><button id="quit">← Changer de mode</button><span id="ctx"></span></div>
   </section>
 
   <!-- FIN -->
-  <section id="end" hidden>
-    <h1>Partie <span>terminée</span></h1>
+  <section id="end" class="final" hidden>
+    <p class="eyebrow">Partie terminée</p>
     <div class="big" id="final"></div>
-    <p class="rank" id="endRank"></p>
-    <p class="sub" id="recap"></p>
-    <button class="go" id="again">Rejouer</button>
+    <p class="lvl" id="endRank"></p>
+    <p class="goal" id="endPct"></p>
+    <div class="steps" id="endSteps" aria-hidden="true"></div>
+    <p class="hint" id="recap"></p>
+    <div class="row">
+      <button class="cta" id="again">Rejouer <span aria-hidden="true">↻</span></button>
+      <button class="ghost" id="home">Changer de mode</button>
+    </div>
   </section>
 </main>
 
@@ -403,15 +525,21 @@ const QUESTIONS = [
 ];
 
 const MODES = [
-  { id:"plus",   name:"La plus citée",   goal:"Donne la réponse que le plus de gens citeraient.", pts:(a,q)=>a[1]/max(q,1) },
-  { id:"moins",  name:"La moins citée",  goal:"Donne une réponse juste que presque personne ne citerait.", pts:(a,q)=>1-a[1]/max(q,1) },
-  { id:"recent", name:"La plus récente", goal:"Donne la réponse la plus récente possible.", pts:(a,q)=>span(a,q) },
-  { id:"ancien", name:"La plus ancienne",goal:"Donne la réponse la plus ancienne possible.", pts:(a,q)=>1-span(a,q) },
+  { id:"plus",   name:"La plus citée",    kicker:"Le grand classique", sub:"Pensez comme tout le monde.", goal:"Trouvez la réponse la plus citée.",       pts:(a,q)=>a[1]/max(q,1),
+    svg:`<g fill="#4a3b22"><rect x="20" y="70" width="18" height="16"/><rect x="48" y="58" width="18" height="28"/><rect x="76" y="46" width="18" height="40"/><rect x="104" y="32" width="18" height="54"/></g><rect x="132" y="18" width="18" height="68" fill="#f5a623"/><path d="M141 12V2m-5 5 5-5 5 5" stroke="#f5a623" stroke-width="2" fill="none"/>` },
+  { id:"moins",  name:"La moins citée",   kicker:"À contre-courant",   sub:"Sortez des sentiers battus.",  goal:"Trouvez une réponse juste que presque personne ne cite.", pts:(a,q)=>1-a[1]/max(q,1),
+    svg:`<g fill="#4a3b22"><rect x="20" y="18" width="18" height="68"/><rect x="48" y="32" width="18" height="54"/><rect x="76" y="46" width="18" height="40"/><rect x="104" y="58" width="18" height="28"/></g><rect x="132" y="70" width="18" height="16" fill="#ff7a2f"/><path d="M141 8v10m-5-5 5 5 5-5" stroke="#ff7a2f" stroke-width="2" fill="none"/>` },
+  { id:"recent", name:"La plus récente",  kicker:"Dans l'air du temps", sub:"Ayez une longueur d'avance.", goal:"Trouvez la réponse la plus récente.", pts:(a,q)=>span(a,q),
+    svg:`<circle cx="85" cy="50" r="32" fill="none" stroke="#4a3b22" stroke-width="5"/><path d="M85 18a32 32 0 0 1 30 22" fill="none" stroke="#f5a623" stroke-width="5"/><path d="m108 42 8 4 3-9" fill="none" stroke="#f5a623" stroke-width="4"/><path d="M85 32v18l12 8" stroke="#f5a623" stroke-width="5" fill="none"/><path d="M134 22h12m-6-6v12M28 66h8m-4-4v8" stroke="#f5a623" stroke-width="2"/>` },
+  { id:"ancien", name:"La plus ancienne", kicker:"Retour aux sources", sub:"Remontez le temps.", goal:"Trouvez la réponse la plus ancienne.", pts:(a,q)=>1-span(a,q),
+    svg:`<path d="M60 10h50M60 90h50" stroke="#4a3b22" stroke-width="6"/><path d="M66 14c0 24 38 24 38 36s-38 12-38 36M104 14c0 24-38 24-38 36s38 12 38 36" fill="none" stroke="#4a3b22" stroke-width="5"/><path d="M74 24h22l-11 14z" fill="#ff7a2f"/><path d="M85 66 72 84h26z" fill="#ff7a2f"/><path d="M30 34h12m-6-6v12M130 62h8m-4-4v8" stroke="#4a3b22" stroke-width="2"/>` },
 ];
 const max = (q,i) => Math.max(...q.a.map(a=>a[i]));
 const min = (q,i) => Math.min(...q.a.map(a=>a[i]));
 const span = (a,q) => (a[2]-min(q,2)) / ((max(q,2)-min(q,2)) || 1);
 const points = (a,q,m) => Math.round(m.pts(a,q)*100);
+const dated = m => m.id === "recent" || m.id === "ancien";
+const yearTxt = y => y < 0 ? -y + " av. J.-C." : y;
 
 const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/&/g," et ").replace(/\+/g," plus ").replace(/#/g," sharp ").replace(/[^a-z0-9]+/g," ").trim();
 // Réponse reconnue si un alias apparaît comme mot(s) entier(s) ; le plus long alias gagne (« toy story 2 » bat « toy story »).
@@ -425,117 +553,149 @@ function match(input, q) {
   return best;
 }
 
-const $ = id => document.getElementById(id);
+// Palier d'une réponse selon ses points, et classement global selon le % de points obtenus.
+const TIERS = [[90,"Parfait","★","#f5a623"],[70,"Excellent","✦","#5fd39a"],[40,"Bien","●","#63b3ff"],[1,"Pas mal","◐","#b9a6ff"],[0,"Raté","✕","#ff6b5b"]];
+const tier = p => TIERS.find(t => p >= t[0]);
+const RANKS = [[90,"Légende"],[75,"Maître"],[55,"Expert"],[35,"Initié"],[15,"Apprenti"],[0,"Novice"]];
+const rankOf = pct => RANKS.find(r => pct >= r[0])[1];
+
 const ROUNDS = 7, DAY = new Date().toLocaleDateString("fr-CA"); // AAAA-MM-JJ local
-let mode = MODES[1], theme = "Du jour", deck, round, total, timer, left, TIME;
 // Mélange déterministe : même date + même mode = mêmes questions pour tout le monde.
 function seeded(str) { let h = 1779033703; for (const c of str) h = Math.imul(h ^ c.charCodeAt(0), 3432918353); return () => ((h = Math.imul(h ^ h >>> 15, 2246822507) ^ Math.imul(h ^ h >>> 13, 3266489909)) >>> 0) / 4294967296; }
 const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k,v) => { try { localStorage.setItem(k,v); } catch {} } };
 
-// Menu
-for (const m of MODES) {
-  const b = document.createElement("button");
-  b.className = "mode";
-  b.setAttribute("aria-pressed", m === mode);
-  b.onclick = () => { mode = m; [...$("modes").children].forEach(c => c.setAttribute("aria-pressed", c === b)); };
-  $("modes").append(b);
-}
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let mode = MODES[0], theme = "Du jour", deck, round, total, timer, left, TIME, results = [];
+
+// ---------- Accueil ----------
+$("flaps").innerHTML = [..."KISÉKIÉPLUS"].map((c, i) => `<span class="flap${c === "K" && i || c === "P" ? " w" : ""}" style="animation-delay:${i * 60}ms" aria-hidden="true">${c}</span>`).join("");
+$("today").textContent = "Le défi du " + new Date().toLocaleDateString("fr-FR", { day:"numeric", month:"long" });
+$("count").textContent = `${QUESTIONS.length} questions · ${new Set(QUESTIONS.map(q => q.theme)).size} thèmes`;
+
 function paintModes() {
-  MODES.forEach((m, i) => {
+  $("modes").innerHTML = MODES.map((m, i) => {
     const done = store.get(`jour-${DAY}-${m.id}`);
-    $("modes").children[i].innerHTML = `<b>${m.name}</b><small>${m.goal}</small>` + (done !== null ? `<small class="done">Partie du jour : ${done}/700</small>` : "");
-  });
+    return `<button class="mode" aria-pressed="${m === mode}" data-i="${i}"><span class="n">0${i+1}</span><span class="radio"></span>
+      <svg viewBox="0 0 170 96" aria-hidden="true"><path d="M10 88h150M10 40h150" stroke="#2d2a26" stroke-dasharray="3 5"/>${m.svg}</svg>
+      <div class="k">${m.kicker}</div><div class="title">${m.name}</div><p>${m.sub}</p>${done !== null ? `<div class="done">Du jour : ${done} / 700</div>` : ""}</button>`;
+  }).join("");
 }
+$("modes").onclick = e => { const b = e.target.closest(".mode"); if (b) { mode = MODES[b.dataset.i]; paintModes(); } };
 paintModes();
-for (const t of ["Du jour", "Tous", ...new Set(QUESTIONS.map(q=>q.theme))]) {
-  const b = document.createElement("button");
-  b.textContent = t; b.setAttribute("aria-pressed", t === theme);
-  b.onclick = () => { theme = t; [...$("themes").children].forEach(c => c.setAttribute("aria-pressed", c === b)); };
-  $("themes").append(b);
-}
 
-function show(id) { for (const s of ["menu","game","end"]) $(s).hidden = s !== id; }
+const THEMES = ["Du jour", "Tous", ...new Set(QUESTIONS.map(q => q.theme))];
+function paintThemes() { $("themes").innerHTML = THEMES.map(t => `<button class="chip" aria-pressed="${t === theme}">${t === "Du jour" ? "✦ " : ""}${t}</button>`).join(""); }
+$("themes").onclick = e => { const b = e.target.closest(".chip"); if (b) { theme = THEMES[[...$("themes").children].indexOf(b)]; paintThemes(); } };
+paintThemes();
 
+function show(id) { for (const s of ["menu","game","end"]) $(s).hidden = s !== id; scrollTo(0, 0); }
+
+// ---------- Partie ----------
 function start() {
   const rnd = theme === "Du jour" ? seeded(DAY + mode.id) : Math.random;
-  const dated = mode.id === "recent" || mode.id === "ancien";
-  deck = QUESTIONS.filter(q => (theme === "Du jour" || theme === "Tous" || q.theme === theme) && (q.y || !dated))
+  deck = QUESTIONS.filter(q => (theme === "Du jour" || theme === "Tous" || q.theme === theme) && (q.y || !dated(mode)))
     .map(q => [rnd(), q]).sort((a,b) => a[0] - b[0]).map(x => x[1]).slice(0, ROUNDS);
   TIME = mode.id === "moins" ? 40 : 30;
-  round = 0; total = 0; results = []; show("game"); ask();
+  round = 0; total = 0; results = [];
+  $("ctx").textContent = `${mode.name} · ${theme}`;
+  show("game"); ask();
 }
 
-// Palier d'une réponse selon ses points, et classement global selon le % de points obtenus.
-const TIERS = [[90,"Parfait","★","#ffcc33"],[70,"Excellent","✦","#3ddc97"],[40,"Bien","●","#5cb8ff"],[1,"Pas mal","◐","#c9b8ff"],[0,"Raté","✕","#ff5c7a"]];
-const tier = p => TIERS.find(t => p >= t[0]);
-const RANKS = [[90,"Légende"],[75,"Maître"],[55,"Expert"],[35,"Initié"],[15,"Apprenti"],[0,"Novice"]];
-const rankOf = pct => RANKS.find(r => pct >= r[0])[1];
-let results = [];
-function paintProgress() {
-  $("steps").innerHTML = deck.map((_, i) => { const t = results[i] != null && tier(results[i]);
-    return t ? `<span style="background:${t[3]};border-color:${t[3]}">${t[2]}</span>` : `<span class="${i === round ? "cur" : ""}"></span>`; }).join("");
+function stepsHTML(cur) {
+  return deck.map((_, i) => { const t = results[i] != null && tier(results[i]);
+    return t ? `<span class="t" style="color:${t[3]};border-color:${t[3]}55">${t[2]}</span>` : `<span class="${i === cur ? "cur" : ""}">${String(i+1).padStart(2,"0")}</span>`; }).join("");
+}
+function paintHud() {
+  $("steps").innerHTML = stepsHTML(round);
+  $("score").textContent = total;
   const pct = results.length ? Math.round(total / (results.length * 100) * 100) : 0;
-  $("rank").innerHTML = results.length ? `Classement : <b>${rankOf(pct)}</b> · ${pct} % des points` : "Classement : —";
+  $("rankLine").textContent = `${rankOf(pct)} · ${pct} % des points`;
 }
 
 function ask() {
   const q = deck[round];
-  $("round").textContent = `Manche ${round+1}/${deck.length} · ${q.theme}`;
-  $("score").textContent = `${total} pts`;
-  $("goal").textContent = mode.goal + (mode.id === "recent" || mode.id === "ancien" ? ` Critère : ${q.y}.` : "");
+  paintHud();
+  $("crumb").innerHTML = `${esc(q.theme)}<i>/</i>Question ${round+1} sur ${deck.length}`;
   $("question").textContent = q.q;
+  $("goal").textContent = mode.goal;
+  $("crit").textContent = dated(mode) ? `Critère : ${q.y}` : "";
   $("ask").hidden = false; $("reveal").hidden = true;
   $("answer").value = ""; $("wrong").hidden = true;
-  paintProgress();
   left = TIME; tick(); run();
 }
 function run() {
-  $("answer").disabled = false; $("answer").focus();
+  $("answer").disabled = $("send").disabled = false; $("answer").focus();
   timer = setInterval(() => { left -= .25; tick(); if (left <= 0) answer(""); }, 250);
 }
-function tick() { $("timer").style.width = (left / TIME * 100) + "%"; }
+function tick() {
+  $("timer").style.width = Math.max(0, left / TIME * 100) + "%";
+  $("secs").textContent = Math.ceil(Math.max(0, left)) + " s";
+  $("ask").classList.toggle("urgent", left <= 5);
+}
 
 function answer(text) {
   clearInterval(timer); // chrono en pause pendant la vérification
   const q = deck[round], hit = text.trim() && match(text, q);
   if (text.trim() && !hit) {
-    $("wrong").textContent = `« ${text.trim()} » : mauvaise réponse, retente !`;
+    $("wrong").textContent = `« ${text.trim()} » : mauvaise réponse, retentez !`;
     $("wrong").hidden = false;
-    $("answer").value = ""; $("answer").disabled = true;
+    $("form").classList.remove("shake"); void $("form").offsetWidth; $("form").classList.add("shake");
+    $("answer").value = ""; $("answer").disabled = $("send").disabled = true;
     return setTimeout(run, 1000); // 1 s pour lire le message, puis le chrono repart
   }
   const p = hit ? points(hit, q, mode) : 0;
-  total += p;
-  $("score").textContent = `${total} pts`;
-  results.push(p); paintProgress();
+  total += p; results.push(p); paintHud();
+
   const t = hit ? tier(p) : TIERS[TIERS.length - 1];
   $("banner").style.background = t[3];
   $("tierName").textContent = `${t[2]} ${hit ? t[1] : "Temps écoulé"}`;
   $("gain").innerHTML = `+${p} <small>pts</small>`;
   const sorted = [...q.a].sort((x,y) => points(y,q,mode) - points(x,q,mode));
   const pos = hit && 1 + q.a.filter(a => points(a,q,mode) > p).length; // ex æquo = même rang
-  $("best").textContent = hit ? `« ${hit[0]} » : c'est la réponse n° ${pos} sur ${q.a.length}.` : `La meilleure réponse était « ${sorted[0][0]} ».`;
-  const shown = sorted.slice(0, 5);
-  if (hit && !shown.includes(hit)) shown.push(hit);
-  const maxPop = max(q,1);
-  $("list").innerHTML = shown.map(a => `<li class="${a===hit?"me":""}"><span>${a[0]}${a===hit?" <em>(toi)</em>":""}</span><span class="pts"><i style="width:${a[1]/maxPop*100}%"></i></span><span class="meta">${a[2] == null || !q.y || mode.id === "plus" || mode.id === "moins" ? a[1] + " %" : (a[2] < 0 ? -a[2] + " av. J.-C." : a[2])}</span></li>`).join("");
+  $("you").textContent = hit ? `« ${hit[0]} »` : `La meilleure : « ${sorted[0][0]} »`;
+  $("rankTxt").textContent = hit ? `C'est la réponse n° ${pos} sur ${q.a.length}. ${p} point${p > 1 ? "s" : ""} !` : "Le temps est écoulé : 0 point.";
+
+  // Fenêtre autour de ma réponse (2 au-dessus, 2 en dessous) ; les flèches l'élargissent de 5 en 5.
+  const at = hit ? sorted.indexOf(hit) : 0;
+  let lo = Math.max(0, at - 2), hi = Math.min(sorted.length, Math.max(at + 3, 5));
+  const rk = a => 1 + q.a.filter(b => points(b,q,mode) > points(a,q,mode)).length;
+  const row = a => `<li class="${a === hit ? "me" : ""}"><span><small class="v">n°${rk(a)}</small> ${esc(a[0])}${a === hit ? "<em>(toi)</em>" : ""}</span><span class="v">${dated(mode) ? yearTxt(a[2]) : a[1] + " %"}</span><span class="b"><i data-w="${a[1] / max(q,1) * 100}"></i></span></li>`;
+  const fill = () => requestAnimationFrame(() => $("list").querySelectorAll("i[data-w]").forEach((el, i) => setTimeout(() => el.style.width = el.dataset.w + "%", i * 60)));
+  const paint = () => {
+    $("list").className = hi - lo > 10 ? "all" : "";
+    $("list").innerHTML = sorted.slice(lo, hi).map(row).join(""); fill();
+    $("up").hidden = lo === 0;     $("up").textContent = `▲ ${lo} réponse${lo > 1 ? "s" : ""} au-dessus`;
+    $("down").hidden = hi === sorted.length; $("down").textContent = `▼ ${sorted.length - hi} réponse${sorted.length - hi > 1 ? "s" : ""} en dessous`;
+  };
+  $("up").onclick = () => { lo = Math.max(0, lo - 5); paint(); };
+  $("down").onclick = () => { hi = Math.min(sorted.length, hi + 5); paint(); };
+  paint();
+
+  $("confetti").innerHTML = t[1] === "Parfait" && hit ? Array.from({ length:28 }, (_, i) =>
+    `<i style="left:${Math.random()*100}%;background:${["#f5a623","#5fd39a","#8c867b"][i % 3]};animation-delay:${Math.random()*.4}s"></i>`).join("") : "";
   $("ask").hidden = true; $("reveal").hidden = false;
-  $("next").textContent = round + 1 < deck.length ? "Suivant" : "Voir le score";
+  $("next").innerHTML = (round + 1 < deck.length ? "Question suivante" : "Voir mon score") + ' <span aria-hidden="true">→</span>';
   $("next").focus();
 }
 
-$("start").onclick = start;
-$("again").onclick = () => show("menu");
-$("form").onsubmit = e => { e.preventDefault(); answer($("answer").value); };
-$("next").onclick = () => {
-  if (++round < deck.length) return ask();
-  $("final").textContent = `${total} pts`;
+function end() {
   const pct = Math.round(total / (deck.length * 100) * 100);
-  $("endRank").innerHTML = `Classement : <b>${rankOf(pct)}</b> · ${pct} % des points`;
-  $("recap").textContent = `Mode « ${mode.name} » · thème ${theme} · sur ${deck.length * 100} possibles`;
+  $("final").innerHTML = `${total} <small>/ ${deck.length * 100}</small>`;
+  $("endRank").textContent = rankOf(pct);
+  $("endPct").textContent = `${pct} % des points`;
+  $("endSteps").innerHTML = stepsHTML(-1);
+  $("recap").textContent = `${mode.name} · ${theme}`;
   if (theme === "Du jour") { store.set(`jour-${DAY}-${mode.id}`, total); paintModes(); }
   show("end");
-};
+}
+
+$("start").onclick = start;
+$("form").onsubmit = e => { e.preventDefault(); answer($("answer").value); };
+$("next").onclick = () => ++round < deck.length ? ask() : end();
+$("quit").onclick = () => { clearInterval(timer); show("menu"); };
+$("again").onclick = start;
+$("home").onclick = () => show("menu");
 
 // Auto-vérif (console)
 const nolan = QUESTIONS.find(q => q.q.includes("Nolan")), pix = QUESTIONS.find(q => q.q.includes("Pixar"));
